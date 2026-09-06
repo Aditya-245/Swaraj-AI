@@ -1,0 +1,5 @@
+SOP-SAFETY-011 — Pressure Equipment (Confidential)
+1. Isolate and depressurize vessels before inspection.
+2. PPE: helmet, goggles, gloves, safety shoes.
+3. Never exceed 6 bar during test. Verify gauge calibration sticker.
+4. Two-person rule in confined areas. Log entry/exit times.

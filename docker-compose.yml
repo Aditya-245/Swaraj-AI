@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  api:
+    build: ./docker/api
+    ports: ["8080:8080"]
+    environment: [PORT=8080, NODE_ENV=production]
+    volumes: [./data:/app/data, ./out:/app/out]
+    depends_on: [qdrant, postgres, ollama]
+    networks: [sovnet]
+  ui:
+    build: ./docker/ui
+    ports: ["3000:3000"]
+    depends_on: [api]
+    networks: [sovnet]
+  ollama:
+    image: ollama/ollama:latest
+    volumes: [ollama:/root/.ollama]
+    ports: ["11434:11434"]
+    networks: [sovnet]
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes: [qdrant:/qdrant/storage]
+    ports: ["6333:6333"]
+    networks: [sovnet]
+  postgres:
+    image: postgres:16
+    environment: [POSTGRES_DB=sovereign, POSTGRES_USER=sov, POSTGRES_PASSWORD=sov-local-only]
+    volumes: [pg:/var/lib/postgresql/data]
+    networks: [sovnet]
+networks: { sovnet: { driver: bridge } }
+volumes: { ollama: {}, qdrant: {}, pg: {} }

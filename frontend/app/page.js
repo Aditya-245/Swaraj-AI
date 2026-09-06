@@ -1,0 +1,1 @@
+export default function Page(){const s=["Chat/Tasks","Documents","Knowledge Base","Agents","Audit Logs","Security/System status"];return `<main>${s.map(x=>`<section>${x} — served by local API; see public/index.html for offline build</section>`).join("")}</main>`}

@@ -1,0 +1,22 @@
+{
+  "name": "sovereign-agent",
+  "version": "0.1.0",
+  "description": "Sovereign industrial AI workbench — on-prem, air-gapped, local/open-weight",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "node src/server.js",
+    "workbench": "node scripts/workbench.js",
+    "demo": "node scripts/golden-path.js",
+    "security": "node scripts/egress-check.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "pg": "^8.23.0"
+  }
+}

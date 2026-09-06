@@ -1,0 +1,6 @@
+INSPECTION REPORT IR-2026-042 (Confidential — Plant B)
+Date: 2026-08-28. Inspector: R. Iyer. Line: Pressure vessel PV-7.
+Joints inspected: 42. Method: visual + dye penetrant on 6 suspect seams.
+Findings: 3 joints with porosity (code W-12, 4-6mm), 1 gauge reading 4.2 bar (within limit).
+Photos: weld-photo.jpg (seam close-up), gauge-meter.jpg (dial).
+Recommendation requested: accept / rework with justification per SOP-WELD-042.

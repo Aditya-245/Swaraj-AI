@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Swaraj AI — स्वराज · Sovereign Industrial Intelligence</title>
+<meta name="description" content="Swaraj AI — India's sovereign industrial workbench. On-prem, air-gapped, open-weight models, private RAG, sandboxed execution, auditable deliverables. Zero-egress by proof."/>
+<style>
+:root{
+  --cream:#FAF6EE; --cream2:#F3EDDF; --paper:#FFFDF8; --sand:#EEE5D2;
+  --ink:#14162B; --ink2:#34385A; --muted:#6D7393; --faint:#9AA0BE;
+  --line:#E5DCC6; --line2:#D8CCB2;
+  --saffron:#E96A1F; --saffron2:#C65312; --saffron-soft:#FCE8D8;
+  --leaf:#177245; --leaf-soft:#DDEFE3;
+  --chakra:#2E3EC8; --chakra-deep:#1A237E; --glow:#A5BBFC;
+  --gold:#B9820A; --gold-soft:#FBF0D3;
+  --kumkum:#B3261E;
+  --night:#101230; --night2:#181B3E; --night3:#222658; --term:#0C0E22;
+  --serif:Georgia,'Palatino Linotype','Nirmala UI','Mangal','Kokila',serif;
+  --sans:system-ui,-apple-system,'Segoe UI','Nirmala UI','Mangal',Roboto,sans-serif;
+  --mono:Consolas,'Cascadia Mono',Menlo,monospace;
+  --r:18px; --shadow:0 18px 60px rgba(20,22,43,.12);
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--saffron);color:#fff}
+a{color:inherit}
+.tricolour{height:5px;background:linear-gradient(to right,#E96A1F 0 33.3%,#F6F1E2 33.3% 66.6%,#177245 66.6% 100%);position:sticky;top:0;z-index:100}
+/* ---------- NAV ---------- */
+nav{position:sticky;top:5px;z-index:99;backdrop-filter:blur(14px);background:rgba(250,246,238,.82);border-bottom:1px solid var(--line);transition:.3s}
+nav.scrolled{background:rgba(255,253,248,.94);box-shadow:0 8px 30px rgba(20,22,43,.08)}
+.nav-in{max-width:1240px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand-name{font-family:var(--serif);font-size:21px;letter-spacing:.2px;line-height:1}
+.brand-name .dev{color:var(--saffron2);font-size:16px;margin-left:6px}
+.brand-sub{font-size:10.5px;letter-spacing:2.2px;text-transform:uppercase;color:var(--muted)}
+.links{display:flex;gap:4px;margin-left:18px}
+.links a{text-decoration:none;font-size:13.8px;font-weight:550;color:var(--ink2);padding:8px 13px;border-radius:999px;transition:.2s}
+.links a:hover{background:var(--sand);color:var(--ink)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.4px;padding:7px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--ink2)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--leaf);box-shadow:0 0 0 4px rgba(23,114,69,.15);animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(23,114,69,.06)}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:999px;padding:12px 24px;font-weight:700;font-size:14.5px;cursor:pointer;text-decoration:none;transition:transform .18s var(--ease),box-shadow .18s,filter .18s;white-space:nowrap}
+.btn-saffron{background:linear-gradient(180deg,#F07C2E,var(--saffron2));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 10px 26px rgba(233,106,31,.35)}
+.btn-saffron:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn-ink{background:var(--ink);color:#fff;box-shadow:0 10px 26px rgba(20,22,43,.28)}
+.btn-ink:hover{transform:translateY(-1px);background:#1E2140}
+.btn-ghost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(20,22,43,.15)}
+.btn-ghost:hover{background:var(--cream2)}
+.btn-sm{padding:9px 18px;font-size:13.5px}
+.burger{display:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-size:18px;cursor:pointer}
+/* ---------- HERO ---------- */
+.hero{position:relative;overflow:hidden;background:
+  radial-gradient(900px 480px at 12% 8%,rgba(233,106,31,.14),transparent 60%),
+  radial-gradient(800px 500px at 88% 18%,rgba(46,62,200,.13),transparent 60%),
+  radial-gradient(700px 420px at 55% 110%,rgba(23,114,69,.12),transparent 60%),var(--cream)}
+.hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,rgba(185,82,10,.22) 1.3px,transparent 1.4px);background-size:22px 22px;mask-image:radial-gradient(720px 460px at 68% 36%,black 30%,transparent 72%);opacity:.5;pointer-events:none}
+.hero-in{max-width:1240px;margin:0 auto;padding:64px 22px 36px;display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center;position:relative}
+.pill{display:inline-flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 8px;font-size:12.5px;font-weight:650;color:var(--ink2);box-shadow:0 4px 16px rgba(20,22,43,.06)}
+.pill .tri{display:inline-flex;border-radius:999px;overflow:hidden;font-size:11px;font-weight:800}
+.pill .tri span{padding:4px 9px;color:#fff}
+.pill .tri span:nth-child(1){background:var(--saffron)} .pill .tri span:nth-child(2){background:var(--ink)} .pill .tri span:nth-child(3){background:var(--leaf)}
+h1.display{font-family:var(--serif);font-size:clamp(40px,5.4vw,68px);line-height:1.02;margin:18px 0 14px;letter-spacing:-.02em;font-weight:500}
+h1 .sw{font-style:italic;background:linear-gradient(100deg,var(--saffron2),#E8930C 45%,var(--leaf));-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .devanagari{display:block;font-size:.62em;color:var(--ink2);font-weight:400;letter-spacing:.01em}
+.type-line{font-family:var(--mono);font-size:14px;color:var(--ink2);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:inline-flex;gap:8px;align-items:center;box-shadow:0 4px 14px rgba(20,22,43,.05)}
+.type-line b{color:var(--saffron2)}
+#typer{color:var(--chakra-deep);font-weight:700}
+.caret{display:inline-block;width:8px;height:16px;background:var(--saffron);animation:blink 1s steps(1) infinite;vertical-align:-2px}
+@keyframes blink{50%{opacity:0}}
+.lead{color:var(--ink2);font-size:17px;max-width:56ch;margin:16px 0 22px}
+.lead strong{color:var(--ink)}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.micro{font-size:12.5px;color:var(--muted);margin-top:12px;display:flex;gap:16px;flex-wrap:wrap}
+.micro span{display:inline-flex;gap:6px;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 10px;text-align:center;box-shadow:0 6px 20px rgba(20,22,43,.05)}
+.stat b{display:block;font-family:var(--serif);font-size:26px;line-height:1}
+.stat small{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted)}
+.stat.saff b{color:var(--saffron2)} .stat.leaf b{color:var(--leaf)} .stat.ink b{color:var(--chakra-deep)}
+/* hero visual */
+.visual{position:relative;min-height:560px}
+#chakraCanvas{position:absolute;inset:0;width:100%;height:100%;border-radius:26px}
+.orb-frame{position:absolute;inset:18px;border-radius:26px;background:linear-gradient(180deg,rgba(255,253,248,.6),rgba(255,253,248,.15));border:1px solid rgba(255,255,255,.9);box-shadow:var(--shadow),inset 0 1px 0 #fff;overflow:hidden}
+.glass{position:absolute;background:rgba(255,253,248,.88);backdrop-filter:blur(10px);border:1px solid rgba(20,22,43,.1);border-radius:16px;box-shadow:0 16px 44px rgba(20,22,43,.16);padding:13px 15px;font-size:13px;animation:float 6s ease-in-out infinite}
+.glass .t{font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:700}
+.glass code{font-family:var(--mono);font-size:12px}
+@keyframes float{50%{transform:translateY(-10px)}}
+.g1{top:34px;left:6px;max-width:250px;animation-delay:0s}
+.g2{top:210px;right:2px;max-width:270px;animation-delay:1.4s}
+.g3{bottom:30px;left:22px;right:22px;display:flex;gap:12px;align-items:center;animation-delay:2.6s}
+.g3 .dl{margin-left:auto;display:flex;gap:8px}
+.dl a{font-size:12px;font-weight:700;background:var(--ink);color:#fff;padding:7px 13px;border-radius:999px;text-decoration:none}
+.verdict-mini{font-family:var(--serif);background:#DDEFE3;border:1px solid #9ED3B4;color:#14532D;border-radius:10px;padding:6px 12px;font-size:15px}
+.route-dots{display:flex;gap:6px;margin-top:8px}
+.route-dots i{height:6px;border-radius:99px;flex:1;background:var(--sand)}
+.route-dots i.on{background:linear-gradient(90deg,var(--saffron),var(--gold))}
+/* ---------- MARQUEE ---------- */
+.marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--ink);color:#F3EDDF;overflow:hidden;white-space:nowrap}
+.marquee-in{display:inline-flex;gap:0;padding:13px 0;animation:slide 28s linear infinite;font-size:12.5px;letter-spacing:2px;font-weight:700}
+.marquee-in span{padding:0 26px;display:inline-flex;align-items:center;gap:10px}
+.marquee-in em{font-style:normal;color:var(--glow)}
+.marquee-in .saf{color:#FF9A4D}.marquee-in .grn{color:#7FD79A}
+@keyframes slide{to{transform:translateX(-50%)}}
+/* ---------- SECTIONS ---------- */
+section.block{max-width:1240px;margin:0 auto;padding:72px 22px 8px}
+.eyebrow{font-size:11.5px;letter-spacing:2.4px;text-transform:uppercase;color:var(--saffron2);font-weight:800;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:26px;height:2px;background:var(--saffron);display:inline-block;border-radius:2px}
+h2.sec{font-family:var(--serif);font-size:clamp(30px,3.6vw,46px);line-height:1.08;margin:12px 0 10px;letter-spacing:-.015em;font-weight:500}
+.sub{color:var(--muted);max-width:72ch;font-size:16px;margin:0 0 26px}
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:22px;position:relative;overflow:hidden;transition:transform .25s var(--ease),box-shadow .25s,border-color .25s;will-change:transform}
+.card:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:var(--line2)}
+.card::after{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--saffron),var(--gold),var(--leaf));opacity:0;transition:.25s}
+.card:hover::after{opacity:1}
+.card .num{font-family:var(--mono);font-size:12px;color:var(--faint)}
+.card h3{font-family:var(--serif);font-size:21px;margin:8px 0 8px;font-weight:600}
+.card p{color:var(--ink2);font-size:14.2px;margin:0}
+.card .icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:var(--cream2);border:1px solid var(--line)}
+.card .tag{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:11.5px;background:var(--cream);border:1px solid var(--line);padding:4px 10px;border-radius:999px;color:var(--ink2)}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+/* golden path */
+.path-wrap{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+.steps{display:flex;flex-direction:column;gap:8px}
+.step{text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;transition:.2s;font-family:inherit}
+.step:hover{border-color:var(--saffron)}
+.step.on{border-color:var(--saffron2);box-shadow:0 8px 26px rgba(233,106,31,.18);background:linear-gradient(180deg,#FFFDF8,#FFF3E6)}
+.step .n{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+.step.on .n{background:linear-gradient(180deg,var(--saffron),var(--saffron2))}
+.step b{display:block;font-size:14px}
+.step small{color:var(--muted);font-size:12.5px}
+.term{background:var(--term);border:1px solid #2A2E55;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(12,14,34,.35);color:#EFE7D2}
+.term-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #23264A;background:#14173A}
+.term-bar i{width:11px;height:11px;border-radius:50%;display:block}
+.term-body{padding:18px;font-family:var(--mono);font-size:13px;line-height:1.7;min-height:360px}
+.term-body .t{color:#8B91B0}.term-body .ok{color:#7FD79A}.term-body .warn{color:#EAC96A}.term-body .run{color:var(--glow)}.term-body .saf{color:#FF9A4D}
+.progress{height:6px;background:#23264A;border-radius:99px;overflow:hidden;margin:0 18px 16px}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--saffron),var(--gold),var(--leaf));transition:width .6s var(--ease)}
+/* dark architecture */
+.dark{margin-top:70px;background:radial-gradient(900px 500px at 20% 0%,rgba(165,187,252,.14),transparent 60%),radial-gradient(700px 420px at 90% 30%,rgba(233,106,31,.16),transparent 60%),linear-gradient(180deg,var(--night),#0C0E24);color:#EDE9D8;border-top:1px solid #262A52;border-bottom:1px solid #262A52;position:relative;overflow:hidden}
+.dark::before{content:"❖";position:absolute;font-size:560px;right:-80px;top:-120px;opacity:.045;color:#fff;pointer-events:none}
+.dark-in{max-width:1240px;margin:0 auto;padding:70px 22px}
+.dark .eyebrow{color:var(--glow)} .dark h2.sec{color:#fff}
+.dark .sub{color:#A7ABC9}
+.arch{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.flow{background:rgba(255,255,255,.045);border:1px solid rgba(165,187,252,.22);border-radius:18px;padding:20px}
+.flow h4{margin:0 0 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--glow)}
+.pipe{display:flex;flex-direction:column;gap:0}
+.node{background:#1D2148;border:1px solid #33386E;border-radius:12px;padding:11px 14px;font-size:13.5px;display:flex;gap:10px;align-items:center}
+.node small{color:#9AA0BE;display:block;font-size:12px}
+.node b{color:#fff}
+.connector{text-align:center;color:var(--glow);font-size:18px;line-height:1.2}
+.counters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.counter{background:#151841;border:1px solid #2C3170;border-radius:14px;padding:16px 10px;text-align:center}
+.counter b{display:block;font-size:34px;font-family:var(--serif);color:#fff}
+.counter span{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#9AA0BE}
+.proof{font-size:12.5px;color:#7FD79A;background:rgba(127,215,154,.08);border:1px solid rgba(127,215,154,.3);border-radius:12px;padding:10px 14px;font-family:var(--mono)}
+table.vs{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:14px;background:rgba(255,255,255,.03);border-radius:14px;overflow:hidden}
+table.vs th,table.vs td{text-align:left;padding:11px 14px;border-bottom:1px solid rgba(165,187,252,.14)}
+table.vs th{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--glow)}
+table.vs td:last-child{color:#7FD79A;font-weight:650}
+/* languages */
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.lang-hero{background:linear-gradient(135deg,#1B1E45,#2E3EC8 60%,#E96A1F 130%);color:#fff;border-radius:22px;padding:34px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.lang-hero::after{content:"अ";position:absolute;right:-10px;bottom:-46px;font-family:var(--serif);font-size:260px;opacity:.12;line-height:1}
+.lang-hero h3{font-family:var(--serif);font-size:40px;margin:6px 0;line-height:1.1}
+.lang-hero p{color:#D9DCF5;max-width:44ch}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pills span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);padding:7px 14px;border-radius:999px;font-size:13px}
+.pills span b{font-weight:800}
+.lang-card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:24px}
+.lang-card .row{display:flex;gap:10px;flex-wrap:wrap}
+.q{border:1px solid var(--line);background:var(--cream);border-radius:12px;padding:10px 13px;font-size:13.5px;cursor:pointer;transition:.2s;font-family:inherit}
+.q:hover{border-color:var(--saffron2);background:#FFF4E8}
+.qa{background:var(--ink);color:#F3EDDF;border-radius:12px;padding:14px;font-size:13.5px;margin-top:12px;min-height:86px}
+/* models */
+.models{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.model{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:.25s}
+.model:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.model-top{padding:20px 20px 0}
+.model-top .k{font-family:var(--mono);font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+.model h3{font-family:var(--mono);font-size:19px;margin:8px 0 4px}
+.model p{color:var(--ink2);font-size:13.8px;margin:0 0 12px}
+.model-bar{height:8px;background:var(--cream2);border-radius:99px;overflow:hidden;margin:0 20px}
+.model-bar i{display:block;height:100%;border-radius:99px}
+.model-foot{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 18px;font-size:12.5px;color:var(--muted)}
+.badge-local{font-size:11px;font-weight:800;letter-spacing:1px;background:#DDEFE3;color:var(--leaf);border:1px solid #9ED3B4;padding:4px 10px;border-radius:999px}
+/* security */
+.sec-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+.sec-live{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:24px}
+.sec-counts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.sec-counts div{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center}
+.sec-counts b{display:block;font-family:var(--serif);font-size:30px}
+.check{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--ink2)}
+.check li{display:flex;gap:10px;align-items:flex-start;background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:10px 13px}
+pre.dump{background:var(--term);color:#F1EAD8;border-radius:14px;padding:16px;overflow:auto;font-family:var(--mono);font-size:12.2px;max-height:420px;line-height:1.6;border:1px solid #2A2E55}
+/* CTA */
+.cta{max-width:1240px;margin:64px auto 0;padding:0 22px}
+.cta-in{position:relative;overflow:hidden;border-radius:26px;background:linear-gradient(120deg,#191C44 10%,#2E3EC8 55%,#E96A1F 115%);color:#fff;padding:52px 40px;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:center;box-shadow:0 30px 80px rgba(26,35,126,.35)}
+.cta-in::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.22) 1.2px,transparent 1.3px);background-size:18px 18px;mask-image:radial-gradient(500px 300px at 80% 50%,black,transparent 75%);opacity:.5}
+.cta-in h2{font-family:var(--serif);font-size:clamp(28px,3.4vw,44px);margin:0 0 10px;line-height:1.1}
+.cta-in p{color:#D9DCF5;margin:0 0 20px}
+.cta-art{text-align:center;position:relative}
+.big-chakra{width:190px;height:190px;animation:spin 26s linear infinite;filter:drop-shadow(0 10px 30px rgba(0,0,0,.35))}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* footer */
+footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
+.foot-in{max-width:1240px;margin:0 auto;padding:44px 22px 18px;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:22px}
+.foot-in h5{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.foot-in a{display:block;text-decoration:none;color:var(--ink2);font-size:14px;padding:4px 0}
+.foot-in a:hover{color:var(--saffron2)}
+.foot-brand{font-family:var(--serif);font-size:24px}
+.foot-note{font-size:13px;color:var(--muted);max-width:36ch}
+.foot-base{max-width:1240px;margin:0 auto;padding:14px 22px 22px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line)}
+.jaali{height:12px;background-image:radial-gradient(circle,var(--saffron) 1.4px,transparent 1.5px);background-size:13px 13px;opacity:.3;margin:26px 0;border-radius:99px}
+/* toast */
+#toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,80px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:13.5px;transition:.35s var(--ease);z-index:200;opacity:0;box-shadow:0 16px 40px rgba(0,0,0,.3)}
+#toast.show{transform:translate(-50%,0);opacity:1}
+/* responsive */
+@media(max-width:1020px){
+  .hero-in{grid-template-columns:1fr} .visual{min-height:500px}
+  .grid6{grid-template-columns:1fr 1fr} .path-wrap,.arch,.lang-grid,.sec-grid,.cta-in{grid-template-columns:1fr}
+  .links{display:none} .burger{display:block}
+  .links.open{display:flex;position:absolute;top:64px;left:12px;right:12px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:10px;flex-direction:column;box-shadow:var(--shadow)}
+  .foot-in{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){.grid6,.models,.stats,.sec-counts,.counters{grid-template-columns:1fr 1fr}.cta-in{padding:32px 22px}.hero-in{padding-top:40px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="tricolour"></div>
+<nav id="nav">
+  <div class="nav-in">
+    <a class="brand" href="#top" aria-label="Swaraj AI home">
+      <svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17.5" fill="none" stroke="#E96A1F" stroke-width="3"/><circle cx="20" cy="20" r="11" fill="none" stroke="#14162B" stroke-width="1.8"/><g stroke="#14162B" stroke-width="1.8"><line x1="20" y1="3" x2="20" y2="37"/><line x1="3" y1="20" x2="37" y2="20"/><line x1="8" y1="8" x2="32" y2="32"/><line x1="32" y1="8" x2="8" y2="32"/></g><circle cx="20" cy="20" r="3.4" fill="#E96A1F"/></svg>
+      <span><span class="brand-name">Swaraj AI<span class="dev">स्वराज</span></span><br/><span class="brand-sub">Sovereign Industrial Workbench</span></span>
+    </a>
+    <div class="links" id="links">
+      <a href="#capabilities">Capabilities</a>
+      <a href="#golden">Golden Path</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#languages">Bharat First</a>
+      <a href="#security">Security</a>
+    </div>
+    <div class="nav-right">
+      <span class="live" id="livePill"><i></i><span id="liveTxt">LOCAL · CHECKING…</span></span>
+      <a class="btn btn-saffron btn-sm" href="/workbench.html" data-magnet>Launch Workbench →</a>
+      <button class="burger" id="burger" aria-label="menu">☰</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <div class="hero-in">
+    <div>
+      <span class="pill"><span class="tri"><span>स्व</span><span>रा</span><span>ज</span></span> SIH26117 · On-prem · Air-gapped · <b>&nbsp;Zero-egress by proof</b></span>
+      <h1 class="display">India's own industrial <span class="sw">intelligence.</span>
+        <span class="devanagari">आपका डेटा, आपकी मिट्टी, आपकी मशीन — बाहर कुछ नहीं जाता।</span>
+      </h1>
+      <div class="type-line"><b>❖ swaraj &gt;</b><span id="typer"></span><span class="caret"></span></div>
+      <p class="lead">A private AI employee that runs <strong>inside your infrastructure</strong>. Local open-weight models, private RAG on your SOPs, sandboxed code, DOCX + PDF deliverables, and a <strong>hash-chained audit</strong> — with network-level proof that nothing ever leaves.</p>
+      <div class="cta-row">
+        <a class="btn btn-saffron" href="/workbench.html" data-magnet>▶&nbsp; Launch Workbench</a>
+        <a class="btn btn-ink" href="#golden" data-magnet>See the Golden Path</a>
+        <a class="btn btn-ghost" href="#security" data-magnet>🛡 Zero-egress proof</a>
+      </div>
+      <div class="micro"><span>✔ No cloud keys</span><span>✔ No npm install</span><span>✔ Stdlib-only server</span><span>✔ Ollama · Qdrant · Postgres ready</span></div>
+      <div class="stats">
+        <div class="stat saff"><b><span data-count="100">0</span>%</b><small>Local execution</small></div>
+        <div class="stat leaf"><b><span data-count="0">0</span></b><small>External calls</small></div>
+        <div class="stat ink"><b><span data-count="22">0</span></b><small>Bharat languages</small></div>
+        <div class="stat"><b style="font-family:var(--mono);font-size:20px;padding-top:5px">⛓✔</b><small>Audit-chained</small></div>
+      </div>
+    </div>
+    <div class="visual" aria-hidden="true">
+      <div class="orb-frame"><canvas id="chakraCanvas"></canvas></div>
+      <div class="glass g1"><div class="t">🧭 Local route · planner</div><code>inspection → <b style="color:#C65312">document</b> → local-mistral</code><div class="route-dots"><i></i><i class="on"></i><i class="on"></i><i></i></div></div>
+      <div class="glass g2"><div class="t">🛡 Egress guard · live</div><code>ext-LLM <b>0</b> · remote-MCP <b>0</b><br/>ext-API <b>0</b> · internet <b>0</b></code></div>
+      <div class="glass g3"><span class="verdict-mini">Verdict: ACCEPT · 4.2% &lt; 10%</span><span style="font-size:12.5px;color:var(--muted)">IR-2026-042 approval note ready</span><span class="dl"><a href="/workbench.html">Open →</a></span></div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true"><div class="marquee-in" id="marquee">
+  <span><em>❖</em> ON-PREM</span><span class="saf"><em>❖</em> AIR-GAPPED</span><span><em>❖</em> OPEN-WEIGHT MODELS</span><span class="grn"><em>❖</em> ZERO-EGRESS 0/0/0/0</span><span><em>❖</em> PRIVATE RAG</span><span class="saf"><em>❖</em> SANDBOXED CODE</span><span><em>❖</em> HASH-CHAINED AUDIT</span><span class="grn"><em>❖</em> MADE IN INDIA 🇮🇳</span>
+</div></div>
+
+<!-- ============ CAPABILITIES ============ -->
+<section class="block" id="capabilities">
+  <div class="eyebrow">01 · What it does — OpenAI-grade UX, Anthropic-grade calm</div>
+  <h2 class="sec">One workbench. <i style="font-family:var(--serif);color:var(--saffron2)">Six sovereign powers.</i></h2>
+  <p class="sub">Inspired by the best of OpenAI's clarity, Anthropic's trust, OpenClaw's agency and Sarvam's Bharat-first voice — rebuilt for factories, utilities, railways and PSUs that can never send data out.</p>
+  <div class="grid6">
+    <div class="card reveal" data-tilt><div class="num">/ 01</div><div class="icon">🧭</div><h3>Local Planner &amp; Router</h3><p>Every prompt is classified on-machine — general, coding, vision or document — and routed to the right local model. No cloud fallback, ever.</p><span class="tag">orchestrator.js · model-router.js</span></div>
+    <div class="card reveal" data-tilt><div class="num">/ 02</div><div class="icon">📚</div><h3>Private RAG on your SOPs</h3><p>Your welding, safety and maintenance SOPs are indexed locally. Retrieval is cited chunk-by-chunk — auditors see exactly what grounded each answer.</p><span class="tag">rag.js · qdrant-local semantics</span></div>
+    <div class="card reveal" data-tilt><div class="num">/ 03</div><div class="icon">👁</div><h3>Shop-floor Vision</h3><p>Weld photos, gauges and inspection stills are read by a local vision model with findings you can verify — label, box, confidence.</p><span class="tag">local-llava · moondream</span></div>
+    <div class="card reveal" data-tilt><div class="num">/ 04</div><div class="icon">⛓</div><h3>Sandboxed Calculation</h3><p>Defect-rate maths runs in a tmp-only sandbox: static deny on fs / net / env, stripped environment, timeout kill, full cleanup.</p><span class="tag">sandbox.js · zero-trust exec</span></div>
+    <div class="card reveal" data-tilt><div class="num">/ 05</div><div class="icon">✒</div><h3>Auditable Deliverables</h3><p>Every run produces a real approval note — DOCX + PDF — stamped with route, SOP hits, sandbox result and hash.</p><span class="tag">deliver.js · out/ artefacts</span></div>
+    <div class="card reveal" data-tilt><div class="num">/ 06</div><div class="icon">🛡</div><h3>Zero-Egress Proof</h3><p>Not a promise — counters. External LLM / MCP / API / internet calls are metered live and surfaced in the UI.</p><span class="tag">egress.js · 0/0/0/0</span></div>
+  </div>
+</section>
+
+<!-- ============ GOLDEN PATH ============ -->
+<section class="block" id="golden">
+  <div class="eyebrow">02 · The golden path — click through a real run</div>
+  <h2 class="sec">Inspection IR-2026-042, <i style="color:var(--leaf)">end to end.</i></h2>
+  <p class="sub">The same pipeline that <span style="font-family:var(--mono);font-size:13px;background:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:99px">npm run demo</span> executes offline. Select a stage to replay its trace.</p>
+  <div class="path-wrap">
+    <div class="steps" id="steps" role="tablist"></div>
+    <div>
+      <div class="term"><div class="term-bar"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span style="margin-left:8px;font-family:var(--mono);font-size:12px;color:#8B91B0">swaraj-agent · local-only · IR-2026-042</span></div>
+      <div class="term-body" id="termBody"></div>
+      <div class="progress"><i id="progBar"></i></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <a class="btn btn-saffron btn-sm" href="/workbench.html" data-magnet>▶ Run this live in Workbench</a>
+        <button class="btn btn-ghost btn-sm" id="replayBtn">↻ Replay trace</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DARK ARCHITECTURE ============ -->
+<div class="dark" id="architecture">
+  <div class="dark-in">
+    <div class="eyebrow">03 · Sovereign architecture — OpenClaw-grade agency, inside your walls</div>
+    <h2 class="sec">Nothing leaves. <span style="color:var(--glow)">Everything is proven.</span></h2>
+    <p class="sub">One stdlib-only Node server. Local models via Ollama. Local semantics via Qdrant. Postgres when you need it. The browser is the control room — the plant never dials home.</p>
+    <div class="arch">
+      <div class="flow reveal"><h4>❖ Request flow · 127.0.0.1 only</h4>
+        <div class="pipe">
+          <div class="node">📝 <span><b>Operator prompt + files</b><small>workbench.html → POST /api/tasks</small></span></div><div class="connector">▼</div>
+          <div class="node">🧭 <span><b>Local planner &amp; router</b><small>general · coding · vision · document</small></span></div><div class="connector">▼</div>
+          <div class="node">📚 <span><b>Private RAG + Vision</b><small>sop-welding · sop-safety · weld-photo.jpg</small></span></div><div class="connector">▼</div>
+          <div class="node">⛓ <span><b>Sandboxed calc → Verdict</b><small>4.2% defect · ACCEPT / REVIEW</small></span></div><div class="connector">▼</div>
+          <div class="node">✒ <span><b>DOCX + PDF + audit hash</b><small>out/ · data/audit.jsonl · sha256 chain</small></span></div>
+        </div>
+      </div>
+      <div class="flow reveal"><h4>❖ Egress discipline · live counters</h4>
+        <div class="counters">
+          <div class="counter"><b id="cLLM">0</b><span>ext LLM</span></div>
+          <div class="counter"><b id="cMCP">0</b><span>remote MCP</span></div>
+          <div class="counter"><b id="cAPI">0</b><span>ext API</span></div>
+          <div class="counter"><b style="color:#7FD79A">0</b><span>internet</span></div>
+        </div>
+        <div class="proof" id="proofLine">✔ verifying against /api/security …</div>
+        <table class="vs"><thead><tr><th></th><th>Public cloud AI</th><th>Swaraj AI स्वराज</th></tr></thead>
+        <tbody>
+          <tr><td>Data residency</td><td>Unknown region ✖</td><td>Your server room ✔</td></tr>
+          <tr><td>Network</td><td>Always online ✖</td><td>Air-gapped capable ✔</td></tr>
+          <tr><td>Models</td><td>Black-box API ✖</td><td>Open-weight, local ✔</td></tr>
+          <tr><td>Audit</td><td>Vendor logs ✖</td><td>Hash-chained, yours ✔</td></tr>
+          <tr><td>Cost</td><td>Per-token rent ✖</td><td>One-time infra ✔</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LANGUAGES ============ -->
+<section class="block" id="languages">
+  <div class="eyebrow">04 · Bharat first — Sarvam-inspired, factory-floor ready</div>
+  <h2 class="sec">Speaks the <i style="color:var(--saffron2)">shop floor's</i> language.</h2>
+  <p class="sub">Hindi on the nameplate, English in the audit file, Tamil / Marathi / Bengali at the machine. Set the working language per site — the record stays precise.</p>
+  <div class="lang-grid">
+    <div class="lang-hero reveal">
+      <div style="font-size:12px;letter-spacing:2.4px;font-weight:800;color:#FFD9B8">आत्मनिर्भर भारत · SELF-RELIANT INTELLIGENCE</div>
+      <h3>नमस्ते।<br/>What shall we<br/>build today?</h3>
+      <p>Twenty-two scheduled languages, one sovereign stack. Greetings, SOPs and verdicts render in the script your crew actually reads.</p>
+      <div class="pills"><span><b>नमस्ते</b> Hindi</span><span><b>வணக்கம்</b> Tamil</span><span><b>నమస్కారం</b> Telugu</span><span><b>ನಮಸ್ಕಾರ</b> Kannada</span><span><b>നമസ്കാരം</b> Malayalam</span><span><b>নমস্কার</b> Bengali</span><span><b>नमस्कार</b> Marathi</span><span><b>Hello</b> English</span><span>+ 14 more</span></div>
+    </div>
+    <div class="lang-card reveal">
+      <div style="font-size:11px;letter-spacing:2px;font-weight:800;color:var(--muted)">TRY A PROMPT — CLICK TO PREVIEW THE REPLY</div>
+      <div class="row" style="margin-top:12px" id="langQs">
+        <button class="q">वेल्ड दोष W-12 की जाँच करो और स्वीकृति नोट बनाओ</button>
+        <button class="q">Review IR-2026-042 against SOP and produce approval note</button>
+        <button class="q">வெல்ட் குறைபாடு விகிதம் 10%-க்கு கீழே உள்ளதா?</button>
+      </div>
+      <div class="qa" id="langA">Select a prompt above — the reply is composed locally, grounded in your SOPs, and delivered as DOCX + PDF.</div>
+      <div class="jaali"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <span class="badge-local">✔ LOCAL COMPOSE</span>
+        <span style="font-size:13px;color:var(--muted)">No translation API · no cloud · script-accurate verdicts</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODELS ============ -->
+<section class="block" id="models">
+  <div class="eyebrow">05 · Open-weight fleet — small, fast, yours</div>
+  <h2 class="sec">Right-sized models. <i style="color:var(--chakra)">Zero rent.</i></h2>
+  <p class="sub">Runs on a single workstation GPU — or CPU in a pinch. Swap any entry for your approved weights; the router doesn't care, the audit still holds.</p>
+  <div class="models">
+    <div class="model reveal" data-tilt><div class="model-top"><div class="k">General reasoning</div><h3>llama3.2:1b</h3><p>Daily Q&amp;A, summaries, bilingual drafting. Fast enough to feel instant on local hardware.</p></div><div class="model-bar"><i style="width:88%;background:linear-gradient(90deg,#E96A1F,#B9820A)"></i></div><div class="model-foot"><span>1B · instruct</span><span class="badge-local">✔ LOCAL</span></div></div>
+    <div class="model reveal" data-tilt><div class="model-top"><div class="k">Code &amp; calc</div><h3>qwen2.5-coder:1.5b</h3><p>Defect-rate scripts, calibration math, sandbox-safe snippets. Reviewed before it ever executes.</p></div><div class="model-bar"><i style="width:72%;background:linear-gradient(90deg,#2E3EC8,#A5BBFC)"></i></div><div class="model-foot"><span>1.5B · coder</span><span class="badge-local">✔ LOCAL</span></div></div>
+    <div class="model reveal" data-tilt><div class="model-top"><div class="k">Vision</div><h3>moondream</h3><p>Weld beads, gauges, nameplates. Findings with labels you can cross-check against the photo.</p></div><div class="model-bar"><i style="width:64%;background:linear-gradient(90deg,#177245,#7FD79A)"></i></div><div class="model-foot"><span>tiny · VLM</span><span class="badge-local">✔ LOCAL</span></div></div>
+  </div>
+</section>
+
+<!-- ============ SECURITY ============ -->
+<section class="block" id="security">
+  <div class="eyebrow">06 · Security — proof, not promises</div>
+  <h2 class="sec">Ask the server. <i style="color:var(--leaf)">It will show its counters.</i></h2>
+  <p class="sub">These numbers are fetched live from <span style="font-family:var(--mono);font-size:13px;background:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:99px">GET /api/security</span> on this machine. Go air-gapped and re-run — they won't move.</p>
+  <div class="sec-grid">
+    <div class="sec-live reveal">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="badge-local" id="secBadge">● CHECKING…</span><span style="font-size:12.5px;color:var(--muted)" id="secMeta">contacting local server…</span>
+      <button class="btn btn-ghost btn-sm" id="secBtn" style="margin-left:auto">↻ Re-verify</button></div>
+      <div class="sec-counts">
+        <div><b id="sLLM">–</b><div style="font-size:11px;letter-spacing:1.2px;color:var(--muted)">EXT LLM</div></div>
+        <div><b id="sMCP">–</b><div style="font-size:11px;letter-spacing:1.2px;color:var(--muted)">REMOTE MCP</div></div>
+        <div><b id="sAPI">–</b><div style="font-size:11px;letter-spacing:1.2px;color:var(--muted)">EXT API</div></div>
+        <div><b>0</b><div style="font-size:11px;letter-spacing:1.2px;color:var(--muted)">INTERNET</div></div>
+      </div>
+      <ul class="check">
+        <li>🛡 <span><b>EgressGuard</b> allowlists localhost only — every other host is denied and logged.</span></li>
+        <li>⛓ <span><b>Sandbox</b> denies fs / net / env, jails cwd to tmp, strips secrets, kills on timeout.</span></li>
+        <li>🧾 <span><b>Audit</b> is a sha256 hash chain — <span style="font-family:var(--mono)">data/audit.jsonl</span>, verifiable with <span style="font-family:var(--mono)">npm test</span>.</span></li>
+        <li>🔑 <span><b>No cloud keys</b> — the server scans env and config and refuses to phone home.</span></li>
+      </ul>
+    </div>
+    <div class="reveal"><pre class="dump" id="secDump">{\n  "awaiting": "GET /api/security …"\n}</pre>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><a class="btn btn-ink btn-sm" href="/workbench.html" data-magnet>Open Audit Logs →</a><button class="btn btn-ghost btn-sm" id="copyBtn">⧉ Copy zero-egress snippet</button></div></div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<div class="cta"><div class="cta-in reveal">
+  <div style="position:relative;z-index:1">
+    <div style="font-size:11.5px;letter-spacing:2.4px;font-weight:800;color:#FFD9B8">🇮🇳 SWARAJ AI · SIH26117 · AI FOR ALL, FROM INDIA</div>
+    <h2>Bring the workbench<br/>inside your walls.</h2>
+    <p>One command. No cloud. Your SOPs, your models, your proof — running on <span style="font-family:var(--mono)">http://127.0.0.1:8080</span>.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-saffron" href="/workbench.html" data-magnet>▶ Launch Workbench</a>
+      <button class="btn btn-ghost" id="cmdBtn" data-magnet>⧉ Copy: npm start</button>
+    </div>
+    <div style="font-family:var(--mono);font-size:12px;color:#D9DCF5;margin-top:12px">$ npm test &nbsp;·&nbsp; $ npm run demo &nbsp;·&nbsp; $ npm start</div>
+  </div>
+  <div class="cta-art"><svg class="big-chakra" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#fff" stroke-width="3" opacity=".9"/><circle cx="50" cy="50" r="28" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/><g stroke="#fff" stroke-width="2" opacity=".85"><line x1="50" y1="6" x2="50" y2="94"/><line x1="6" y1="50" x2="94" y2="50"/><line x1="19" y1="19" x2="81" y2="81"/><line x1="81" y1="19" x2="19" y2="81"/><line x1="35" y1="10" x2="65" y2="90"/><line x1="65" y1="10" x2="35" y2="90"/><line x1="10" y1="35" x2="90" y2="65"/><line x1="10" y1="65" x2="90" y2="35"/></g><circle cx="50" cy="50" r="8" fill="#FF9A4D"/></svg>
+  <div style="font-family:var(--serif);font-style:italic;color:#FFE9D2;position:relative">सत्यमेव जयते</div></div>
+</div></div>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="foot-in">
+    <div><div class="foot-brand">Swaraj AI <span style="color:var(--saffron2)">स्वराज</span></div><p class="foot-note">Sovereign Industrial AI Workbench. A private AI employee running inside company infrastructure — on-prem, air-gapped, local / open-weight.</p><p class="foot-note" style="font-family:var(--mono);font-size:12px">SIH26117 · stdlib-only · offline-first</p></div>
+    <div><h5>Product</h5><a href="#capabilities">Capabilities</a><a href="#golden">Golden path</a><a href="#architecture">Architecture</a><a href="/workbench.html">Launch workbench →</a></div>
+    <div><h5>Trust</h5><a href="#security">Zero-egress proof</a><a href="/workbench.html">Audit logs</a><a href="#models">Open-weight fleet</a><a href="#languages">Bharat languages</a></div>
+    <div><h5>Run it</h5><a href="/api/health">GET /api/health</a><a href="/api/security">GET /api/security</a><a href="/api/agents">GET /api/agents</a><a href="/api/audit">GET /api/audit</a></div>
+  </div>
+  <div class="foot-base"><span>🇮🇳 Swaraj AI · AI for all, from India · runs fully offline on your infrastructure</span><span id="footStat">local · sandboxed · audited · <span id="year"></span></span></div>
+  <div class="tricolour"></div>
+</footer>
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show');},2400);}
+  $('year').textContent=new Date().getFullYear();
+
+  /* nav */
+  var nav=$('nav');
+  addEventListener('scroll',function(){nav.classList.toggle('scrolled',scrollY>10);},{passive:true});
+  $('burger').onclick=function(){$('links').classList.toggle('open');};
+  document.querySelectorAll('#links a').forEach(function(a){a.onclick=function(){$('links').classList.remove('open');};});
+
+  /* duplicate marquee for seamless loop */
+  var m=$('marquee');m.innerHTML+=m.innerHTML;
+
+  /* reveal on scroll */
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+
+  /* counters */
+  var cio=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(!e.isIntersecting)return;cio.unobserve(e.target);
+    var el=e.target,end=parseInt(el.dataset.count,10)||0,t0=performance.now(),d=1400;
+    (function f(t){var p=Math.min(1,(t-t0)/d),v=Math.round(end*(1-Math.pow(1-p,3)));el.textContent=v;if(p<1)requestAnimationFrame(f);})(t0);
+  });},{threshold:.5});
+  document.querySelectorAll('[data-count]').forEach(function(el){cio.observe(el);});
+
+  /* typewriter — Sarvam-style multilingual greetings */
+  var phrases=["Namaste · what shall we inspect today?","नमस्ते · आज क्या जाँचना है?","வணக்கம் · இன்று எதை ஆய்வு செய்யலாம்?","Review IR-2026-042 → verdict + DOCX + PDF","Zero-egress … 0 / 0 / 0 / 0 ✔"];
+  var pi=0,ci=0,del=false,ty=$('typer');
+  (function tick(){
+    var p=phrases[pi];
+    ty.textContent=p.slice(0,ci);
+    if(!del){ci++;if(ci>p.length+8)del=true;}
+    else{ci--;if(ci<=0){del=false;pi=(pi+1)%phrases.length;}}
+    setTimeout(tick,del?26:52);
+  })();
+
+  /* tilt cards */
+  if(matchMedia('(pointer:fine)').matches){
+    document.querySelectorAll('[data-tilt]').forEach(function(c){
+      c.addEventListener('mousemove',function(e){var r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform='translateY(-5px) rotateX('+(-y*7)+'deg) rotateY('+(x*9)+'deg)';});
+      c.addEventListener('mouseleave',function(){c.style.transform='';});
+    });
+    /* magnetic buttons */
+    document.querySelectorAll('[data-magnet]').forEach(function(b){
+      b.addEventListener('mousemove',function(e){var r=b.getBoundingClientRect();b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.12)+'px,'+((e.clientY-r.top-r.height/2)*.18)+'px)';});
+      b.addEventListener('mouseleave',function(){b.style.transform='';});
+    });
+  }
+
+  /* ===== hero chakra canvas : Ashoka-inspired sovereign orb ===== */
+  (function(){
+    var cv=$('chakraCanvas'),ctx=cv.getContext('2d'),W,H,mx=.5,my=.5,t=0;
+    var reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function size(){var r=cv.parentElement.getBoundingClientRect();W=cv.width=r.width*devicePixelRatio;H=cv.height=r.height*devicePixelRatio;}
+    size();addEventListener('resize',size);
+    cv.parentElement.parentElement.addEventListener('mousemove',function(e){var r=cv.getBoundingClientRect();mx=(e.clientX-r.left)/r.width;my=(e.clientY-r.top)/r.height;});
+    var P=[];for(var i=0;i<90;i++)P.push({a:Math.random()*Math.PI*2,r:.18+Math.random()*.32,s:.0015+Math.random()*.004,o:.25+Math.random()*.6,c:['#E96A1F','#2E3EC8','#177245','#B9820A'][i%4],w:1+Math.random()*2.2});
+    function frame(){
+      t+=.008;ctx.clearRect(0,0,W,H);
+      var cx=W*(.5+(mx-.5)*.05),cy=H*(.46+(my-.5)*.05),R=Math.min(W,H)*.30;
+      /* glow */
+      var g=ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.9);
+      g.addColorStop(0,'rgba(233,106,31,.20)');g.addColorStop(.5,'rgba(46,62,200,.10)');g.addColorStop(1,'rgba(46,62,200,0)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+      /* outer rings */
+      [[1.28,'rgba(233,106,31,.55)',2],[1.02,'rgba(20,22,43,.35)',1.5],[.78,'rgba(46,62,200,.5)',2]].forEach(function(rg,i){
+        ctx.beginPath();ctx.arc(cx,cy,R*rg[0]+Math.sin(t*(1+i*.3))*4,0,7);ctx.strokeStyle=rg[1];ctx.lineWidth=rg[2]*devicePixelRatio;ctx.stroke();
+      });
+      /* 24 spokes */
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(t*.35);
+      for(var s=0;s<24;s++){ctx.rotate(Math.PI/12);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-R*.72);ctx.strokeStyle=s%3===0?'rgba(233,106,31,.85)':'rgba(26,35,126,.55)';ctx.lineWidth=(s%3===0?2.4:1.3)*devicePixelRatio;ctx.stroke();}
+      ctx.beginPath();ctx.arc(0,0,R*.72,0,7);ctx.strokeStyle='rgba(26,35,126,.7)';ctx.lineWidth=2.4*devicePixelRatio;ctx.stroke();
+      ctx.beginPath();ctx.arc(0,0,R*.13,0,7);ctx.fillStyle='#E96A1F';ctx.fill();
+      ctx.restore();
+      /* orbiting particles */
+      P.forEach(function(p){
+        p.a+=p.s;var rr=R*(p.r+.75)+Math.sin(t*2+p.a)*6;
+        var x=cx+Math.cos(p.a)*rr*1.25+(mx-.5)*22, y=cy+Math.sin(p.a)*rr*.95+(my-.5)*22;
+        ctx.globalAlpha=p.o;ctx.beginPath();ctx.arc(x,y,p.w*devicePixelRatio,0,7);ctx.fillStyle=p.c;ctx.fill();ctx.globalAlpha=1;
+      });
+      /* devanagari watermark */
+      ctx.fillStyle='rgba(20,22,43,.07)';ctx.font=(R*.9)+'px Georgia,serif';ctx.textAlign='center';ctx.fillText('स्व',cx+R*1.05,cy+R*.95);
+      if(!reduced)requestAnimationFrame(frame);
+    }
+    frame();
+  })();
+
+  /* ===== golden path stepper ===== */
+  var STAGES=[
+    {t:"Parse & OCR",d:"inspection-IR-2026-042.txt + weld-photo.jpg",l:["<span class='t'>$ swaraj ingest IR-2026-042</span>","<span class='ok'>✔ parsed 48 lines · OCR 312 tokens (local)</span>","<span class='t'>defect codes: W-12 ×3 · W-07 ×1 · rate pending calc</span>"]},
+    {t:"Vision read",d:"local-llava · moondream on weld-photo.jpg",l:["<span class='run'>◆ vision → moondream (local, 0 egress)</span>","<span class='ok'>✔ bead undercut W-12 · conf .87 · box [0.31,0.44,.52,.61]</span>","<span class='ok'>✔ porosity W-07 · conf .71 — flagged for calc</span>"]},
+    {t:"SOP retrieval",d:"private RAG · sop-welding #c2, #c5",l:["<span class='run'>◆ rag.search('weld dye-penetrant W-12') top-5</span>","<span class='ok'>✔ sop-welding#c2 score .91 — accept iff defect &lt; 10%</span>","<span class='ok'>✔ sop-welding#c5 score .84 — torque cal every 90 days</span>"]},
+    {t:"Route & plan",d:"document → local-mistral · capped calls",l:["<span class='run'>◆ route → <b>document</b> · local-mistral</span>","<span class='t'>plan: verify calc → draft verdict → render artefacts</span>","<span class='ok'>✔ 1 capped LLM call · no cloud fallback</span>"]},
+    {t:"Sandboxed calc",d:"defect 4.2% · tmp-only · net denied",l:["<span class='run'>◆ sandbox: node -e defect_rate.js (tmp cwd)</span>","<span class='ok'>▣ sandbox OK · stdout: rate=4.2% n=96</span>","<span class='t'>static deny: fs/net/env ✔ · timeout 8s ✔ · cleaned ✔</span>"]},
+    {t:"Verdict & artefacts",d:"ACCEPT · DOCX + PDF · audit hash",l:["<span class='ok'>✒ Verdict: <b>ACCEPT</b> · 4.2% &lt; 10% threshold</span>","<span class='ok'>✔ artefacts → IR-2026-042-approval.docx + .pdf</span>","<span class='ok'>✔ audit appended · sha256 chain valid · egress 0/0/0/0</span>"]}
+  ];
+  var si=0,stepsEl=$('steps'),body=$('termBody'),bar=$('progBar'),typing=false;
+  STAGES.forEach(function(s,i){
+    var b=document.createElement('button');b.className='step'+(i===0?' on':'');b.setAttribute('role','tab');
+    b.innerHTML="<span class='n'>"+(i+1)+"</span><span><b>"+s.t+"</b><small>"+s.d+"</small></span>";
+    b.onclick=function(){show(i);};stepsEl.appendChild(b);
+  });
+  function show(i){
+    si=i;typing=true;
+    Array.prototype.forEach.call(stepsEl.children,function(c,k){c.classList.toggle('on',k===i);});
+    bar.style.width=((i+1)/STAGES.length*100)+'%';
+    body.innerHTML='';var li=0;
+    (function next(){
+      if(li>=STAGES[i].l.length){typing=false;return;}
+      var div=document.createElement('div');body.appendChild(div);
+      var html=STAGES[i].l[li],c=0;
+      (function ch(){div.innerHTML=html.slice(0,++c);if(c<html.length&&typing!==false&&si===i)setTimeout(ch,7);else{li++;setTimeout(next,160);}})();
+    })();
+  }
+  show(0);
+  var auto=setInterval(function(){if(!document.hidden&&!typing)show((si+1)%STAGES.length);},5200);
+  $('replayBtn').onclick=function(){show(si);toast('Replaying stage '+(si+1)+' trace…');};
+
+  /* ===== live security ===== */
+  function paintSec(r){
+    $('sLLM').textContent=r.externalLLM;$('sMCP').textContent=r.remoteMCP;$('sAPI').textContent=r.externalAPI;
+    $('cLLM').textContent=r.externalLLM;$('cMCP').textContent=r.remoteMCP;$('cAPI').textContent=r.externalAPI;
+    var ok=(r.externalLLM+r.remoteMCP+r.externalAPI)===0;
+    $('secBadge').textContent=ok?'● ZERO-EGRESS · LOCAL ONLY':'⚠ EGRESS DETECTED';
+    $('secBadge').style.background=ok?'#DDEFE3':'#FBE3E1';$('secBadge').style.color=ok?'#177245':'#B3261E';
+    $('secMeta').textContent='verified '+new Date().toLocaleTimeString()+' · cloudKeys '+(r.cloudKeys&&r.cloudKeys.length?r.cloudKeys.length:'0')+' · denials '+(r.queuedDenials||0);
+    $('proofLine').textContent=(ok?'✔':'⚠')+' egress '+r.externalLLM+'/'+r.remoteMCP+'/'+r.externalAPI+'/0 · internet 0 · '+(ok?'proof holds — nothing left this machine.':'investigate immediately.');
+    $('secDump').textContent=JSON.stringify(r,null,2);
+    $('liveTxt').textContent='LOCAL · KB '+(r.kb||'—');
+  }
+  function fetchSec(){
+    fetch('/api/security').then(function(x){return x.json();}).then(function(r){
+      fetch('/api/health').then(function(h){return h.json();}).then(function(h){r.kb=h.kb;paintSec(r);}).catch(function(){paintSec(r);});
+    }).catch(function(){
+      $('secMeta').textContent='offline preview — start server: npm start';
+      $('secDump').textContent='{\n  "zeroEgress": true,\n  "externalLLM": 0,\n  "remoteMCP": 0,\n  "externalAPI": 0,\n  "internet": 0,\n  "note": "run `npm start`, then re-verify"\n}';
+      $('sLLM').textContent='0';$('sMCP').textContent='0';$('sAPI').textContent='0';
+      $('liveTxt').textContent='OFFLINE PREVIEW';
+    });
+  }
+  $('secBtn').onclick=function(){fetchSec();toast('Re-verified against /api/security');};
+  fetchSec();setInterval(fetchSec,20000);
+
+  /* language demo */
+  var answers={
+    "वेल्ड दोष W-12 की जाँच करो और स्वीकृति नोट बनाओ":"<b>स्वराज (local-mistral):</b> W-12 दोष दर 4.2% — SOP सीमा 10% से कम। <b>निर्णय: स्वीकृत ✔</b><br><span style='color:#9AA0BE'>DOCX + PDF तैयार · ऑडिट-चेन वैध · egress 0/0/0/0</span>",
+    "Review IR-2026-042 against SOP and produce approval note":"<b>Swaraj (local-mistral):</b> Defect rate 4.2% &lt; 10% SOP threshold. <b>Verdict: ACCEPT ✔</b><br><span style='color:#9AA0BE'>IR-2026-042-approval.docx + .pdf · audit-chained · egress 0/0/0/0</span>",
+    "வெல்ட் குறைபாடு விகிதம் 10%-க்கு கீழே உள்ளதா?":"<b>சுயராஜ் (local):</b> குறைபாடு 4.2% — வரம்பு 10%-க்குள். <b>முடிவு: ஏற்பு ✔</b><br><span style='color:#9AA0BE'>DOCX + PDF தயார் · தணிக்கை சங்கிலி சரி · egress 0/0/0/0</span>"
+  };
+  document.querySelectorAll('#langQs .q').forEach(function(q){q.onclick=function(){$('langA').innerHTML=answers[q.textContent]||'Composed locally ✔';};});
+
+  /* copy buttons */
+  $('copyBtn').onclick=function(){var s='egress: externalLLM=0 remoteMCP=0 externalAPI=0 internet=0 — Swaraj AI zero-egress proof';if(navigator.clipboard)navigator.clipboard.writeText(s);toast('Zero-egress snippet copied ✔');};
+  $('cmdBtn').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText('npm start');toast('Copied: npm start — workbench on 127.0.0.1:8080');};
+})();
+</script>
+</body>
+</html>

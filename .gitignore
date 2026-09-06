@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+frontend/.next/
+frontend/out/
+
+# Logs
+*.log
+*.log.*
+logs/
+npm-debug.log*
+
+# Build outputs
+out/
+dist/
+build/
+.next/
+
+# Local data / runtime (Postgres binaries + uploads are large/machine-specific)
+data/pg/
+data/uploads/
+*.sqlite
+*.db
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Opencode session artifacts
+.opencode/node_modules/
+.opencode/loops/

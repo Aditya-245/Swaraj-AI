@@ -1,0 +1,7 @@
+SOP-WELD-042 — Welding Inspection (Rev 3, Confidential)
+1. Visual check of all weld seams under 500 lux minimum.
+2. Dye penetrant test for suspected linear indications.
+3. Defect codes: W-12 (porosity), W-14 (undercut), W-19 (crack).
+4. Acceptance: defect rate below 10 percent of inspected joints.
+5. Torque wrench calibration every 90 days; pressure vessels max 6 bar.
+6. Record joint count, defect count, NDT method, inspector ID.

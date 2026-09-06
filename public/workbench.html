@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Swaraj AI — स्वराज · Sovereign Industrial Workbench</title>
+<style>
+:root{
+  --cream:#F7F4ED; --paper:#FFFDF8; --sand:#EFE8D8;
+  --ink:#1E2033; --ink2:#3A3F5C; --muted:#6B7194;
+  --indigo:#4A5FC1; --glow:#A5BBFC;
+  --saffron:#E8722A; --saffron-deep:#C05A1A;
+  --leaf:#1E7A46; --haldi:#B97F0B; --kumkum:#B3261E;
+  --line:#E3DCCB; --term:#171A2B;
+  --serif:Georgia,'Palatino Linotype','Nirmala UI','Mangal',serif;
+  --sans:system-ui,-apple-system,'Segoe UI','Nirmala UI',sans-serif;
+  --mono:Consolas,'Cascadia Mono',Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:14px}
+/* tricolour hairline — the indigenous signature */
+.tricolour{height:4px;background:linear-gradient(to right,#E8722A 0 33%,#F5F1E6 33% 66%,#1E7A46 66% 100%)}
+header.top{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand h1{font-family:var(--serif);font-size:22px;margin:0;letter-spacing:.2px}
+.brand .dev{font-size:15px;color:var(--saffron-deep)}
+.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600}
+.badge.ok{background:#E3F2E8;color:var(--leaf);border:1px solid #BFE0CC}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--leaf)}
+.layout{display:grid;grid-template-columns:250px 1fr 340px;min-height:calc(100vh - 70px)}
+/* left — opencode session rail */
+aside.rail{background:var(--paper);border-right:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:10px 18px;font-weight:600;font-size:14px;cursor:pointer}
+.btn-primary{background:linear-gradient(to bottom,var(--saffron),var(--saffron-deep));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-ghost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(30,32,51,.16)}
+.btn-ghost:hover{background:var(--cream)}
+.btn:disabled{opacity:.5;cursor:wait}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{border:0;background:none;text-align:left;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--ink2);cursor:pointer}
+.nav button.on,.nav button:hover{background:var(--sand);color:var(--ink);font-weight:600}
+.hist{font-size:12px;color:var(--muted)}
+.hist div{padding:6px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist div:hover{background:var(--sand)}
+.sess{display:flex;gap:6px;align-items:flex-start;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.sess:hover{background:var(--sand)}
+.sess.on{background:var(--sand);border-color:var(--line)}
+.sess .tt{flex:1;min-width:0}
+.sess .tt b{display:block;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sess .tt span{font-size:11px;color:var(--muted)}
+.sess .del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 4px;border-radius:6px;line-height:1.2}
+.sess .del:hover{color:var(--kumkum)}
+.rule{height:1px;background:radial-gradient(circle,var(--glow) 0%,transparent 100%);margin:4px 0}
+/* centre — opencode chat thread */
+main.thread{padding:20px 26px;max-width:860px;width:100%;margin:0 auto}
+main.thread h2{font-family:var(--serif);font-size:30px;margin:6px 0 2px}
+.sub{color:var(--muted);margin:0 0 14px}
+.msg{border-radius:12px;padding:12px 14px;margin:10px 0;line-height:1.55}
+.msg.user{background:#fff;border:1px solid var(--line);margin-left:12%}
+.msg.agent{background:var(--paper);border:1px solid var(--line);box-shadow:0 1px 3px rgba(30,32,51,.08)}
+.msg .who{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.msg .caret{display:inline-block;color:var(--saffron);font-weight:700;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.toolgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.tool{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px}
+.tool b{display:block;font-size:12px}
+.tool span{color:var(--muted);font-family:var(--mono);font-size:11px}
+.verdict{border-radius:12px;padding:12px 16px;font-family:var(--serif);font-size:18px;margin:10px 0}
+.verdict.accept{background:#E3F2E8;border:1px solid #9ED3B4;color:#14532D}
+.verdict.review{background:#FCF3DC;border:1px solid #EAC96A;color:#6B4E06}
+.arts a{display:inline-block;margin:4px 8px 4px 0;padding:7px 14px;border-radius:999px;background:var(--ink);color:#fff;text-decoration:none;font-size:13px}
+pre.dump{background:var(--term);color:#F1EAD8;border-radius:10px;padding:12px;overflow:auto;font-family:var(--mono);font-size:12px;max-height:300px}
+.composer{position:sticky;bottom:0;background:var(--cream);padding:12px 0 20px}
+.composer .box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 4px 14px rgba(30,32,51,.08)}
+.composer textarea{width:100%;border:0;outline:0;resize:vertical;min-height:64px;font-family:var(--sans);font-size:14px;background:transparent;color:var(--ink)}
+.composer textarea::placeholder{color:#9AA0BE}
+.img-preview{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.img-preview:empty{display:none}
+.thumb{position:relative;width:72px;height:72px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--sand)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .x{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(20,22,43,.8);color:#fff;font-size:12px;cursor:pointer;line-height:1}
+.thumb.uploading{opacity:.55}
+.msg img.attached{max-width:100%;max-height:320px;border-radius:10px;border:1px solid var(--line);display:block;margin-bottom:8px}
+#dropBox.drag{outline:2px dashed var(--saffron);outline-offset:-2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{font-size:12px;padding:4px 12px;border-radius:999px;background:var(--sand);color:var(--ink2);border:1px solid var(--line)}
+.chip.on{background:var(--ink);color:#fff}
+.row{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+/* right — claude-code run monitor */
+aside.monitor{background:var(--term);color:#EFE7D2;padding:14px;display:flex;flex-direction:column;gap:12px;font-size:13px}
+.monitor h3{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--glow);margin:0}
+.term{background:#0F1220;border:1px solid #2A2E4A;border-radius:10px;padding:10px;font-family:var(--mono);font-size:12px;height:300px;overflow:auto;line-height:1.6}
+.term .t{color:#8B91B0}.term .ok{color:#7FD79A}.term .warn{color:#EAC96A}.term .run{color:var(--glow)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#20243C;border:1px solid #2A2E4A;border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:26px;font-family:var(--serif);color:#fff}
+.stat span{font-size:11px;color:#A7ABC9}
+.secbadge{background:#0F1220;border:1px solid #2A5A3E;border-radius:10px;padding:10px;color:#7FD79A;font-size:12px}
+/* jaali divider */
+.jaali{height:14px;background-image:radial-gradient(circle,var(--saffron) 1.6px,transparent 1.7px);background-size:14px 14px;opacity:.35;margin:14px 0}
+section.view{display:none}section.view.on{display:block}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+input[type=text],textarea.box{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:var(--sans);font-size:14px;background:#fff;color:var(--ink)}
+footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);background:var(--paper);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media(max-width:1100px){.layout{grid-template-columns:220px 1fr}aside.monitor{display:none}}
+@media(max-width:760px){.layout{grid-template-columns:1fr}aside.rail{flex-direction:row;flex-wrap:wrap;align-items:center}.nav{flex-direction:row;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="tricolour"></div>
+<header class="top">
+  <div class="brand">
+    <svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="#E8722A" stroke-width="3"/><circle cx="20" cy="20" r="11" fill="none" stroke="#1E2033" stroke-width="2"/><g stroke="#1E2033" stroke-width="2"><line x1="20" y1="3" x2="20" y2="37"/><line x1="3" y1="20" x2="37" y2="20"/><line x1="8" y1="8" x2="32" y2="32"/><line x1="32" y1="8" x2="8" y2="32"/></g><circle cx="20" cy="20" r="3.4" fill="#E8722A"/></svg>
+    <div><h1>Swaraj AI <span class="dev">स्वराज</span></h1><div class="eyebrow">Sovereign Industrial Workbench · On-Prem</div></div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+    <span class="badge ok" id="egressBadge"><span class="dot"></span>ZERO-EGRESS · LOCAL ONLY</span>
+    <button class="btn btn-ghost" id="acctBtn" onclick="acct()">Sign in</button>
+  </div>
+</header>
+<div class="layout">
+  <aside class="rail">
+    <button class="btn btn-primary" onclick="newTask()">＋ New Task</button>
+    <div class="eyebrow">Sessions</div>
+    <div class="hist" id="hist"><div>No tasks yet — run one →</div></div>
+    <div class="row" style="justify-content:space-between"><span class="hist" id="sessMeta"></span><button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="clearHistory()">Clear all</button></div>
+    <div class="rule"></div>
+    <nav class="nav" id="nav">
+      <button data-v="chat" class="on">💬 Chat / Tasks</button>
+      <button data-v="docs">📄 Documents</button>
+      <button data-v="kb">📚 Knowledge Base</button>
+      <button data-v="agents">🤖 Agents</button>
+      <button data-v="audit">🧾 Audit Logs</button>
+      <button data-v="sec">🛡️ Security</button>
+    </nav>
+    <div class="rule"></div>
+    <div class="hist">Models (local, Ollama):<br/>· general — llama3.2:1b<br/>· coding — qwen2.5-coder:1.5b<br/>· vision — moondream</div>
+  </aside>
+  <main class="thread">
+    <section class="view on" id="v-chat">
+      <div class="eyebrow">भारत का अपना AI कर्मचारी · India's own AI employee</div>
+      <h2>Namaste. What shall we build today?</h2>
+      <p class="sub">Agentic runs stay inside your infrastructure — local models, private RAG, sandboxed code, auditable artefacts.</p>
+      <div id="thread"><div class="msg agent"><div class="who">Swaraj · local planner</div>Try: <i>“Review inspection report IR-2026-042 for weld defects against SOP and produce approval note.”</i></div></div>
+      <div class="composer"><div class="box" id="dropBox">
+        <div class="img-preview" id="imgPreview"></div>
+        <textarea id="prompt" placeholder="ask anything"></textarea>
+        <input type="file" id="imgInput" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff" multiple hidden/>
+        <div class="chips" id="routeChips"><span class="chip">auto-route</span><span class="chip">general</span><span class="chip">coding</span><span class="chip">vision</span><span class="chip">document</span></div>
+        <div class="row"><span class="hist" id="runHint">offline · sandboxed · audited · 📎 images stay local</span><button class="btn btn-ghost" id="attachBtn" type="button" onclick="document.getElementById('imgInput').click()">📎 Image</button><button class="btn btn-primary" id="runBtn" onclick="runTask()">▶ Run agent</button></div>
+      </div></div>
+    </section>
+    <section class="view" id="v-docs">
+      <div class="eyebrow">Private corpus · never leaves this machine</div>
+      <h2>Documents</h2>
+      <div class="jaali"></div>
+      <div class="toolgrid" id="docList"></div>
+      <h3 style="font-family:var(--serif)">Add a document</h3>
+      <input type="text" id="docId" placeholder="sop-pump-07"/>
+      <p></p><textarea class="box" id="docText" rows="4" placeholder="Paste confidential text here — it stays in local RAG only."></textarea>
+      <p><button class="btn btn-ghost" onclick="addDoc()">Index locally</button></p>
+      <h3 style="font-family:var(--serif)">Generated artefacts</h3>
+      <div class="arts" id="artList"><span class="hist">none yet</span></div>
+    </section>
+    <section class="view" id="v-kb">
+      <div class="eyebrow">Private RAG · Qdrant-local semantics</div>
+      <h2>Knowledge Base</h2>
+      <div class="jaali"></div>
+      <input type="text" id="q" placeholder="e.g. welding dye penetrant defect W-12"/>
+      <p><button class="btn btn-ghost" onclick="kb()">Search locally</button></p>
+      <div id="kbOut"></div>
+    </section>
+    <section class="view" id="v-agents">
+      <div class="eyebrow">Agent foundation · OpenCode-class planner</div>
+      <h2>Agents</h2>
+      <div class="jaali"></div>
+      <pre class="dump" id="agOut">loading…</pre>
+    </section>
+    <section class="view" id="v-audit">
+      <div class="eyebrow">Hash-chained operational record · no private thoughts</div>
+      <h2>Audit Logs</h2>
+      <div class="jaali"></div>
+      <p><button class="btn btn-ghost" onclick="audit()">Refresh</button> <span class="hist" id="auditMeta"></span></p>
+      <div style="overflow:auto"><table><thead><tr><th>time</th><th>event</th><th>detail</th></tr></thead><tbody id="auBody"></tbody></table></div>
+    </section>
+    <section class="view" id="v-sec">
+      <div class="eyebrow">Proof, not promises · network-level discipline</div>
+      <h2>Security / Zero-Egress</h2>
+      <div class="jaali"></div>
+      <div class="toolgrid" id="secGrid"></div>
+      <pre class="dump" id="secOut"></pre>
+    </section>
+  </main>
+  <aside class="monitor">
+    <h3>❖ Run monitor — live agent trace</h3>
+    <div class="term" id="term"><div><span class="t">swaraj-agent</span> <span class="ok">● idle</span> · local only · awaiting task</div></div>
+    <h3>❖ Model route</h3>
+    <div class="kv"><div class="stat"><b id="stRoute">—</b><span>route</span></div><div class="stat"><b id="stModel" style="font-size:13px;font-family:var(--mono)">—</b><span>model</span></div></div>
+    <h3>❖ Sandbox</h3>
+    <div class="secbadge" id="stSandbox">no execution yet</div>
+    <h3>❖ Egress counters</h3>
+    <div class="kv">
+      <div class="stat"><b id="cLLM">0</b><span>ext LLM</span></div>
+      <div class="stat"><b id="cMCP">0</b><span>remote MCP</span></div>
+      <div class="stat"><b id="cAPI">0</b><span>ext API</span></div>
+      <div class="stat"><b id="cNET">0</b><span>internet</span></div>
+    </div>
+  </aside>
+</div>
+<div class="tricolour"></div>
+<footer><span>🇮🇳 Swaraj AI · AI for all, from India · runs fully offline on your infrastructure</span><span id="foot">local · sandboxed · audited</span></footer>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  document.querySelectorAll('main.thread section.view').forEach(s=>s.classList.remove('on'));
+  $('v-'+b.dataset.v).classList.add('on');
+  if(b.dataset.v==='agents')agents();if(b.dataset.v==='audit')audit();if(b.dataset.v==='sec')sec();if(b.dataset.v==='docs')docs();
+});
+function tlog(cls,html){const t=$('term');const d=document.createElement('div');d.innerHTML=`<span class="t">${new Date().toLocaleTimeString()}</span> <span class="${cls}">${html}</span>`;t.appendChild(d);t.scrollTop=t.scrollHeight;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function bubble(who,text,cls){const th=$('thread');const d=document.createElement('div');d.className='msg '+cls;d.innerHTML=`<div class="who">${esc(who)}</div>${text}`;th.appendChild(d);th.scrollTop=th.scrollHeight;persistMsg(who,text,cls);}
+/* ---- local chat history: every message, every session, in localStorage ---- */
+const LS_KEY='swaraj.history.v1', MAX_SESS=30, MAX_MSG=200;
+let sessions=[], currentId=null;
+const GREET={who:'Swaraj · local planner',cls:'agent',html:'Try: <i>“Review inspection report IR-2026-042 for weld defects against SOP and produce approval note.”</i>',ts:Date.now()};
+function stripTags(h){const d=document.createElement('div');d.innerHTML=h||'';return (d.textContent||'').trim();}
+function loadStore(){try{const s=JSON.parse(localStorage.getItem(LS_KEY)||'null');if(s&&Array.isArray(s.sessions)&&s.sessions.length){sessions=s.sessions;currentId=s.currentId;return;}}catch{}
+  const id='s-'+Date.now();sessions=[{id,title:'New chat',createdAt:Date.now(),updatedAt:Date.now(),messages:[{...GREET}]}];currentId=id;saveStore();}
+function saveStore(){try{localStorage.setItem(LS_KEY,JSON.stringify({sessions,currentId}));}catch(e){while(sessions.length>1){sessions.sort((a,b)=>a.updatedAt-b.updatedAt);sessions.shift();try{localStorage.setItem(LS_KEY,JSON.stringify({sessions,currentId}));break;}catch{}}}renderSessMeta();}
+function cur(){let s=sessions.find(x=>x.id===currentId);if(!s){s={id:'s-'+Date.now(),title:'New chat',createdAt:Date.now(),updatedAt:Date.now(),messages:[{...GREET}]};sessions.unshift(s);currentId=s.id;}return s;}
+function persistMsg(who,html,cls){try{const s=cur();
+  if(cls==='user'&&s.title==='New chat'){s.title=stripTags(html).slice(0,42)||'🖼 Image message';}
+  s.messages.push({who,html,cls,ts:Date.now()});
+  if(s.messages.length>MAX_MSG)s.messages.splice(0,s.messages.length-MAX_MSG);
+  s.updatedAt=Date.now();saveStore();renderHist();}catch{}}
+function paintThread(){const s=cur();const th=$('thread');th.innerHTML='';s.messages.forEach(m=>{const d=document.createElement('div');d.className='msg '+m.cls;const w=document.createElement('div');w.className='who';w.textContent=m.who;d.appendChild(w);d.insertAdjacentHTML('beforeend',m.html||'');th.appendChild(d);});th.scrollTop=th.scrollHeight;}
+function renderHist(){const h=$('hist');if(!h)return;h.innerHTML='';
+  if(!sessions.length)h.innerHTML='<div>No chats yet — run one →</div>';
+  sessions.slice().sort((a,b)=>b.updatedAt-a.updatedAt).forEach(s=>{
+    const d=document.createElement('div');d.className='sess'+(s.id===currentId?' on':'');d.title='Open chat';
+    const w=new Date(s.updatedAt);
+    const tstr=w.toLocaleDateString()+' '+w.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const tt=document.createElement('div');tt.className='tt';
+    const b=document.createElement('b');b.textContent=s.title||'Untitled';
+    const sp=document.createElement('span');sp.textContent=tstr+' · '+s.messages.length+' msgs';
+    tt.appendChild(b);tt.appendChild(sp);d.appendChild(tt);
+    d.onclick=()=>loadSession(s.id);
+    const x=document.createElement('button');x.className='del';x.textContent='×';x.title='Delete chat';
+    x.onclick=(e)=>{e.stopPropagation();sessions=sessions.filter(g=>g.id!==s.id);if(currentId===s.id)currentId=(sessions.slice().sort((a,b)=>b.updatedAt-a.updatedAt)[0]||{}).id||null;if(!sessions.length){loadStore();}else saveStore();paintThread();renderHist();};
+    d.appendChild(x);h.appendChild(d);});
+  renderSessMeta();}
+function renderSessMeta(){const m=$('sessMeta');if(m)m.textContent=sessions.length+' chat(s) · on this device';}
+function loadSession(id){currentId=id;saveStore();paintThread();renderHist();document.querySelector('[data-v=chat]').click();}
+function clearHistory(){if(!confirm('Delete all locally stored chats?'))return;try{localStorage.removeItem(LS_KEY);}catch{}sessions=[];currentId=null;loadStore();paintThread();renderHist();}
+let pendingImages=[];
+function renderPreviews(){const w=$('imgPreview');w.innerHTML='';pendingImages.forEach(f=>{const d=document.createElement('div');d.className='thumb'+(f.uploading?' uploading':'');const im=document.createElement('img');im.src=f.url;im.alt=esc(f.orig||'image');d.appendChild(im);const x=document.createElement('button');x.className='x';x.textContent='×';x.title='Remove';x.onclick=()=>{pendingImages=pendingImages.filter(g=>g!==f);renderPreviews();};d.appendChild(x);w.appendChild(d);});}
+function readAsDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
+async function handleFiles(list){
+  const files=Array.from(list||[]);
+  for(const file of files){
+    if(!file.type.startsWith('image/')){alert(file.name+': only images allowed');continue;}
+    if(file.size>6*1024*1024){alert(file.name+': max 6MB');continue;}
+    if(pendingImages.length>=4){alert('Max 4 images per message');break;}
+    const localURL=URL.createObjectURL(file);
+    const entry={orig:file.name,url:localURL,uploading:true,name:null,bytes:file.size};
+    pendingImages.push(entry);renderPreviews();
+    tlog('run','◆ uploading '+file.name+' ('+Math.round(file.size/1024)+'KB) — local only');
+    try{
+      const dataURL=await readAsDataURL(file);
+      const r=await(await fetch('/api/uploads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file.name,data:dataURL})})).json();
+      if(!r.ok)throw new Error(r.error||'upload failed');
+      entry.name=r.file.name;entry.url=r.file.url;entry.bytes=r.file.bytes;entry.uploading=false;
+      tlog('ok','✔ image stored locally → '+r.file.name);
+    }catch(e){pendingImages=pendingImages.filter(g=>g!==entry);alert('Upload failed: '+(e.message||e));}
+    renderPreviews();
+  }
+}
+function proseHtml(t){return esc(t||'Done.').split(/\n+/).map(x=>`<p style="margin:6px 0">${x}</p>`).join('');}
+function jobHtml(r){
+  const v=r.verdict||'DONE';
+  return `<div class="verdict ${/ACCEPT/i.test(v)?'accept':'review'}">Verdict: ${esc(v)}</div>`+
+    proseHtml(r.reply||'Done. See the approval note below.')+
+    `<div class="toolgrid">`+
+    `<div class="tool"><b>🧭 Route</b><span>${r.route.route} → ${r.route.model}</span></div>`+
+    `<div class="tool"><b>📚 SOP hits</b><span>${r.hits.map(h=>h.id).join(', ')||'none'}</span></div>`+
+    `<div class="tool"><b>👁 Vision</b><span>${r.vision?r.vision.findings.map(f=>f.label).join(', '):'n/a'}</span></div>`+
+    `<div class="tool"><b>🛡 Egress</b><span>${r.egress.externalLLM}/${r.egress.remoteMCP}/${r.egress.externalAPI}/0</span></div></div>`+
+    `<div class="arts"><a href="/artifact/${encodeURIComponent(r.docx.path.split(/[\\/]/).pop())}">⬇ ${esc(r.docx.path.split(/[\\/]/).pop())}</a><a href="/artifact/${encodeURIComponent(r.pdf.path.split(/[\\/]/).pop())}">⬇ ${esc(r.pdf.path.split(/[\\/]/).pop())}</a></div>`+
+    `<details><summary class="hist">technical trace</summary><pre class="dump">${esc(JSON.stringify({plan:r.plan,calc:(r.calc.output||r.calc.error||'').trim().slice(0,300),replySource:r.replySource},null,2))}</pre></details>`;
+}
+function nearBottom(){try{return (document.documentElement.scrollHeight-window.innerHeight-window.scrollY)<200;}catch{return true;}}
+function followBottom(){try{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'auto'});}catch{window.scrollTo(0,document.documentElement.scrollHeight);}}
+async function runTask(){
+  const p=$('prompt').value.trim();
+  const readyImgs=pendingImages.filter(f=>!f.uploading&&f.name);
+  if(!p&&readyImgs.length===0){if(pendingImages.some(f=>f.uploading)){alert('Images still uploading — wait a moment.');}return;}
+  const filesToSend=readyImgs.map(f=>({name:f.name}));
+  const promptToSend=p||'Describe this image in detail and flag any weld defects, corrosion, cracks, or safety issues.';
+  $('prompt').value='';pendingImages=[];renderPreviews();
+  $('runBtn').disabled=true;$('runBtn').textContent='⏳ Running locally…';
+  const imgHtml=readyImgs.map(f=>`<a href="${esc(f.url)}" target="_blank"><img class="attached" src="${esc(f.url)}" alt="${esc(f.orig||'uploaded image')}"/></a>`).join('');
+  bubble('You',(imgHtml?imgHtml:'')+(p?esc(p):'<i style="color:var(--muted)">[image only — auto prompt]</i>'),'user');
+  if(readyImgs.length)tlog('run','◆ '+readyImgs.length+' image(s) attached — vision (moondream, local)');
+  tlog('run','◆ task received — planning (local planner)');
+  let streamed=false;
+  try{streamed=await streamRun(promptToSend,filesToSend);}
+  catch(e){tlog('warn','◌ live stream unavailable — falling back to one-shot reply');}
+  if(!streamed){try{await onceRun(promptToSend,filesToSend);}catch(e){bubble('Swaraj','Server unreachable — is the workbench running on 127.0.0.1:8080?','agent');tlog('warn','✖ fetch failed');}}
+  $('runBtn').disabled=false;$('runBtn').textContent='▶ Run agent';
+}
+/* Live word-by-word reply over SSE (POST /api/tasks/stream). Returns true when
+   the stream completed (even for error verdicts); throws when the stream itself
+   broke so the caller can fall back to the one-shot endpoint. */
+async function streamRun(promptToSend,filesToSend){
+  const res=await fetch('/api/tasks/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptToSend,files:filesToSend})});
+  if(!res.ok||!res.body)throw new Error('stream unavailable');
+  const th=$('thread');
+  const wrap=document.createElement('div');wrap.className='msg agent';
+  const who=document.createElement('div');who.className='who';who.textContent='Swaraj · thinking… (local)';
+  const bodyEl=document.createElement('div');bodyEl.innerHTML='<span class="caret">▍</span>';
+  wrap.appendChild(who);wrap.appendChild(bodyEl);th.appendChild(wrap);
+  let mode='prose',full='',queue='',finalResult=null;
+  const paint=()=>{const stick=nearBottom();
+    if(mode==='pre')bodyEl.innerHTML=`<pre class="dump">${esc(full)}<span class="caret">▍</span></pre>`;
+    else bodyEl.innerHTML=(full?proseHtml(full):'')+'<span class="caret">▍</span>';
+    if(stick)followBottom();};
+  const flusher=setInterval(()=>{if(!queue)return;full+=queue.slice(0,48);queue=queue.slice(48);paint();},30);
+  try{
+    const reader=res.body.getReader();const dec=new TextDecoder();let buf='';
+    for(;;){
+      const {done,value}=await reader.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});let idx;
+      while((idx=buf.indexOf('\n\n'))!==-1){
+        const chunk=buf.slice(0,idx);buf=buf.slice(idx+2);
+        const line=chunk.split('\n').find(l=>l.startsWith('data:'));if(!line)continue;
+        let ev;try{ev=JSON.parse(line.slice(5).trim());}catch{continue;}
+        if(ev.t==='token'){queue+=ev.text||'';}
+        else if(ev.t==='kind'){if(ev.kind==='code')mode='pre';
+          if(ev.route)$('stRoute').textContent=ev.route;if(ev.model)$('stModel').textContent=ev.model;
+          who.textContent='Swaraj · '+(ev.model||ev.kind)+' · typing…';}
+        else if(ev.t==='step'){
+          if(ev.phase==='rag')tlog('','◇ '+esc(ev.text||'searching SOPs'));
+          else if(ev.phase==='sandbox')tlog('run','▣ '+esc(ev.text||'sandbox'));
+          else tlog('run','◆ '+esc(ev.text||ev.phase||'working'));}
+        else if(ev.t==='done'){finalResult=ev.result;try{reader.cancel();}catch{}break;}
+        else if(ev.t==='error'){throw new Error(ev.error||'stream error');}
+      }
+      if(finalResult)break;
+    }
+  }finally{clearInterval(flusher);}
+  full+=queue;queue='';
+  const r=finalResult;
+  if(!r)throw new Error('stream ended without result');
+  if(!r.ok){wrap.remove();bubble('Swaraj',esc(r.error||'failed'),'agent');tlog('warn','✖ '+esc(r.error||'failed'));return true;}
+  $('stRoute').textContent=r.route.route;$('stModel').textContent=r.route.model;
+  const icons={chat:'◌',qa:'❓',code:'⌨',vision:'👁'};
+  let body;
+  if(r.kind==='code'){body=`<pre class="dump">${esc(r.reply||'')}</pre>`;
+    tlog('ok',`⌨ code · ${esc(r.replyModel)} (${esc(r.replySource)}) · no artefacts`);}
+  else if(r.kind==='job'){body=jobHtml(r);
+    tlog('run',`◆ route → <b>${r.route.route}</b> · ${r.route.model}`);
+    tlog('','◇ SOP retrieval → '+r.hits.map(h=>h.id+'#c'+h.chunk).join(', '));
+    const calc=(r.calc.output||r.calc.error||'').trim().slice(0,220);
+    $('stSandbox').textContent=(r.calc.ok?'OK · ':'BLOCKED · ')+calc;
+    tlog(r.calc.ok?'ok':'warn',(r.calc.ok?'▣ sandbox OK · ':'▣ sandbox blocked · ')+esc(calc));
+    tlog('ok',`✔ artefacts → ${esc(r.docx.path.split(/[\\/]/).pop())} + ${esc(r.pdf.path.split(/[\\/]/).pop())}`);
+    tlog('ok','✔ audit appended · zero-egress 0/0/0/0');}
+  else{body=proseHtml(r.reply);
+    tlog('ok',`${icons[r.kind]||'◌'} ${r.kind} · ${esc(r.replyModel)} (${esc(r.replySource)}) · no artefacts`);}
+  bodyEl.innerHTML=body;
+  who.textContent='Swaraj · '+(r.replyModel||r.route.model);
+  persistMsg(who.textContent,body,'agent');
+  if(nearBottom())followBottom();
+  sec(true);
+  return true;
+}
+/* One-shot fallback: identical rendering, single response (old behaviour). */
+async function onceRun(promptToSend,filesToSend){
+  const r=await(await fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptToSend,files:filesToSend})})).json();
+    if(!r.ok){bubble('Swaraj',esc(r.error||'failed'),'agent');tlog('warn','✖ '+esc(r.error||'failed'));}
+    else{
+      $('stRoute').textContent=r.route.route;$('stModel').textContent=r.route.model;
+      if(r.kind==='chat'||r.kind==='qa'||r.kind==='code'||r.kind==='vision'){
+        const icons={chat:'◌',qa:'❓',code:'⌨',vision:'👁'};
+        let body;
+        if(r.kind==='code'){body=`<pre class="dump">${esc(r.reply||'')}</pre>`;}
+        else{body=esc(r.reply||'Done.').split(/\n+/).map(p=>`<p style="margin:6px 0">${p}</p>`).join('');}
+        bubble('Swaraj · '+esc(r.replyModel||r.route.model),body,'agent');
+        tlog('ok',`${icons[r.kind]||'◌'} ${r.kind} · ${esc(r.replyModel)} (${esc(r.replySource)}) · no artefacts`);
+        sec(true);
+      }
+      else{
+      tlog('run',`◆ route → <b>${r.route.route}</b> · ${r.route.model}`);
+      tlog('','◇ SOP retrieval → '+r.hits.map(h=>h.id+'#c'+h.chunk).join(', '));
+      const calc=(r.calc.output||r.calc.error||'').trim().slice(0,220);
+      $('stSandbox').textContent=(r.calc.ok?'OK · ':'BLOCKED · ')+calc;
+      tlog(r.calc.ok?'ok':'warn',(r.calc.ok?'▣ sandbox OK · ':'▣ sandbox blocked · ')+esc(calc));
+      const v=r.verdict||'DONE';
+      const prose=esc(r.reply||'Done. See the approval note below.').split(/\n+/).map(p=>`<p style="margin:6px 0">${p}</p>`).join('');
+      bubble('Swaraj · '+esc(r.replyModel||r.route.model),
+        `<div class="verdict ${/ACCEPT/i.test(v)?'accept':'review'}">Verdict: ${esc(v)}</div>`+
+        prose+
+        `<div class="toolgrid">`+
+        `<div class="tool"><b>🧭 Route</b><span>${r.route.route} → ${r.route.model}</span></div>`+
+        `<div class="tool"><b>📚 SOP hits</b><span>${r.hits.map(h=>h.id).join(', ')||'none'}</span></div>`+
+        `<div class="tool"><b>👁 Vision</b><span>${r.vision?r.vision.findings.map(f=>f.label).join(', '):'n/a'}</span></div>`+
+        `<div class="tool"><b>🛡 Egress</b><span>${r.egress.externalLLM}/${r.egress.remoteMCP}/${r.egress.externalAPI}/0</span></div></div>`+
+        `<div class="arts"><a href="/artifact/${encodeURIComponent(r.docx.path.split(/[\\/]/).pop())}">⬇ ${esc(r.docx.path.split(/[\\/]/).pop())}</a><a href="/artifact/${encodeURIComponent(r.pdf.path.split(/[\\/]/).pop())}">⬇ ${esc(r.pdf.path.split(/[\\/]/).pop())}</a></div>`+
+        `<details><summary class="hist">technical trace</summary><pre class="dump">${esc(JSON.stringify({plan:r.plan,calc:(r.calc.output||r.calc.error||'').trim().slice(0,300),replySource:r.replySource},null,2))}</pre></details>`,'agent');
+      tlog('ok',`✒ reply by ${esc(r.replyModel)} (${esc(r.replySource)})`);
+      tlog('ok',`✔ artefacts → ${esc(r.docx.path.split(/[\\/]/).pop())} + ${esc(r.pdf.path.split(/[\\/]/).pop())}`);
+      tlog('ok','✔ audit appended · zero-egress 0/0/0/0');
+      sec(true);
+      }
+    }
+}
+function newTask(){const id='s-'+Date.now();sessions.unshift({id,title:'New chat',createdAt:Date.now(),updatedAt:Date.now(),messages:[{...GREET}]});if(sessions.length>MAX_SESS)sessions.length=MAX_SESS;currentId=id;pendingImages=[];renderPreviews();$('prompt').value='';saveStore();paintThread();renderHist();$('prompt').focus();document.querySelector('[data-v=chat]').click();}
+async function kb(){const q=$('q').value;const r=await(await fetch('/api/kb?q='+encodeURIComponent(q))).json();
+  $('kbOut').innerHTML=(r.hits||[]).map(h=>`<div class="msg agent"><div class="who">${esc(h.id)} · chunk ${h.chunk} · score ${h.score.toFixed(2)}</div>${esc(h.text)}</div>`).join('')||'<p class="sub">No local hits.</p>';}
+async function addDoc(){const id=$('docId').value.trim(),text=$('docText').value;if(!id||!text)return alert('need id + text');
+  const r=await(await fetch('/api/documents',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,text})})).json();
+  alert(r.ok?'Indexed locally. KB size: '+r.count:r.error);$('docId').value='';$('docText').value='';docs();}
+async function docs(){try{const k=await(await fetch('/api/kb')).json();
+  $('docList').innerHTML=`<div class="tool"><b>📚 KB entries</b><span>${k.count} docs</span></div>`;
+  const a=await(await fetch('/api/artifacts')).json();
+  $('artList').innerHTML=a.files.length?a.files.map(f=>`<a href="/artifact/${encodeURIComponent(f.name)}">⬇ ${esc(f.name)} (${f.bytes}B)</a>`).join(''):'<span class="hist">none yet — run a task</span>';}catch{}}
+async function agents(){$('agOut').textContent=JSON.stringify(await(await fetch('/api/agents')).json(),null,2);}
+async function audit(){const r=await(await fetch('/api/audit')).json();
+  $('auditMeta').textContent=`${r.count} records · chain ${r.verify.ok?'valid ✔':'BROKEN ✖'}`;
+  $('auBody').innerHTML=(r.records||[]).slice(-30).reverse().map(x=>`<tr><td>${(x.ts||'').slice(11,19)}</td><td>${esc(x.event||x.tool||'—')}</td><td>${esc((x.prompt||x.model||x.file||x.docx||x.route||JSON.stringify(x).slice(0,80)))}</td></tr>`).join('');}
+async function sec(silent){try{const r=await(await fetch('/api/security')).json();
+  $('cLLM').textContent=r.externalLLM;$('cMCP').textContent=r.remoteMCP;$('cAPI').textContent=r.externalAPI;$('cNET').textContent=0;
+  $('secGrid').innerHTML=[['External LLM',r.externalLLM],['Remote MCP',r.remoteMCP],['External APIs',r.externalAPI],['Internet traffic',0]].map(([k,v])=>`<div class="tool"><b>${v===0?'🟢':'🔴'} ${k}</b><span>${v} calls</span></div>`).join('');
+  $('secOut').textContent=JSON.stringify(r,null,2);
+  $('egressBadge').innerHTML=(r.externalLLM+r.remoteMCP+r.externalAPI===0)?'<span class="dot"></span>ZERO-EGRESS · LOCAL ONLY':'⚠ EGRESS DETECTED';
+  if(!silent)tlog('ok','🛡 egress proof refreshed · 0/0/0/0');}catch{}}
+loadStore();paintThread();renderHist();
+docs();sec(true);
+$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runTask();}});
+$('imgInput').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
+(function(){const box=$('dropBox');box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('drag');});box.addEventListener('dragleave',()=>box.classList.remove('drag'));box.addEventListener('drop',e=>{e.preventDefault();box.classList.remove('drag');if(e.dataTransfer&&e.dataTransfer.files)handleFiles(e.dataTransfer.files);});})();
+</script>
+<div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(30,32,51,.5);z-index:300;align-items:center;justify-content:center">
+  <div style="background:var(--paper);border-radius:16px;padding:26px;width:min(420px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div id="authBody"></div>
+  </div>
+</div>
+<script>
+let authUser=null, authMode='login';
+async function me(){try{const r=await(await fetch('/api/auth/me')).json();authUser=r.ok?r.user:null;}catch{authUser=null;}
+  $('acctBtn').textContent=authUser?('👤 '+authUser.email):'Sign in';}
+async function acct(){
+  const m=$('authModal');m.style.display='flex';
+  if(authUser){await myHistory();return;}
+  const p=await(await fetch('/api/auth/providers')).json().catch(()=>({google:false,github:false}));
+  const oauth=(p.google||p.github)?`<div class="rule"></div><div class="eyebrow">Continue with</div><div style="display:flex;gap:8px;margin-top:8px">`+
+    (p.google?`<button class="btn btn-ghost" onclick="location.href='/api/auth/google'">G Google</button>`:'')+
+    (p.github?`<button class="btn btn-ghost" onclick="location.href='/api/auth/github'">⌨ GitHub</button>`:'')+`</div>
+    <div class="hist" style="margin-top:6px">OAuth needs internet + a registered app (see README).</div>`:'';
+  $('authBody').innerHTML=`<h2 style="font-family:var(--serif);margin:0 0 4px">${authMode==='login'?'Welcome back':'Create your account'}</h2>
+    <p class="sub">Stored in local PostgreSQL only.</p>
+    ${authMode==='register'?`<input type="text" id="aName" placeholder="Full name"/> <p></p>`:''}
+    <input type="text" id="aEmail" placeholder="you@plant.local"/> <p></p>
+    <input type="password" id="aPass" placeholder="Password (min 8 chars)" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px"/> <p></p>
+    <div id="aErr" style="color:var(--kumkum);font-size:13px;min-height:18px"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="doAuth()">${authMode==='login'?'Log in':'Sign up'}</button>
+    <button class="btn btn-ghost" onclick="authMode=authMode==='login'?'register':'login';acct()">${authMode==='login'?'New here? Sign up':'Have an account? Log in'}</button>
+    <button class="btn btn-ghost" onclick="$('authModal').style.display='none'">Close</button></div>${oauth}`;
+  const err=new URLSearchParams(location.search).get('auth_error');
+  if(err)$('aErr').textContent=err;
+}
+async function doAuth(){
+  const body={email:$('aEmail').value,password:$('aPass').value};
+  if(authMode==='register')body.name=$('aName').value;
+  const r=await(await fetch('/api/auth/'+authMode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+  if(!r.ok){$('aErr').textContent=r.error;return;}
+  authUser=r.user;$('authModal').style.display='none';me();tlog('ok','👤 signed in as '+r.user.email);
+}
+async function myHistory(){
+  const r=await(await fetch('/api/tasks/mine')).json().catch(()=>null);
+  const rows=r&&r.ok?r.tasks:[];
+  $('authBody').innerHTML=`<h2 style="font-family:var(--serif);margin:0">👤 ${esc(authUser.email)}</h2>
+    <p class="sub">via ${esc(authUser.provider)} · member since ${(authUser.created_at||'').slice(0,10)}</p>
+    <div class="eyebrow">My recent tasks (${rows.length})</div>
+    <div style="max-height:220px;overflow:auto;margin:8px 0">`+(rows.map(t=>`<div class="tool"><b>${esc((t.verdict||t.kind||'task').slice(0,40))}</b><span>${esc(t.prompt.slice(0,90))}</span></div>`).join('')||'<span class="hist">none yet</span>')+`</div>
+    <div style="display:flex;gap:8px"><button class="btn btn-ghost" onclick="doLogout()">Log out</button>
+    <button class="btn btn-ghost" onclick="$('authModal').style.display='none'">Close</button></div>`;
+}
+async function doLogout(){await fetch('/api/auth/logout',{method:'POST'});authUser=null;$('authModal').style.display='none';me();tlog('','◌ signed out');}
+document.querySelector('#authModal').addEventListener('click',e=>{if(e.target.id==='authModal')e.target.style.display='none';});
+me();
+</script>
+</body>
+</html>

@@ -1,4 +1,7 @@
-# Sovereign Industrial AI Workbench (SIH26117)
+# Swaraj-AI
+SVAYAM is a sovereign, on-premise AI workbench built for secure organizations. It combines local AI models, agentic workflows, private RAG, multimodal understanding, tools, sandboxed code execution, and auditability—all designed to work without sending sensitive data outside the infrastructure.
+
+## Sovereign Industrial AI Workbench (SIH26117)
 
 Private AI employee running inside company infrastructure. On-prem, air-gapped,
 local/open-weight models, RAG, tools, sandbox, deliverables, audit, zero-egress proof.

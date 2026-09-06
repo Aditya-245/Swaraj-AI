@@ -103,6 +103,18 @@ section.view{display:none}section.view.on{display:block}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
 input[type=text],textarea.box{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:var(--sans);font-size:14px;background:#fff;color:var(--ink)}
+/* permission modal — opencode-style allow once / always / reject */
+#permModal{display:none;position:fixed;inset:0;background:rgba(20,22,43,.55);z-index:400;align-items:center;justify-content:center;padding:18px}
+#permModal.show{display:flex}
+.perm-card{background:var(--paper);border-radius:18px;max-width:520px;width:100%;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.35);border:1px solid var(--line)}
+.perm-risk{font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;padding:4px 12px;border-radius:999px;display:inline-block}
+.perm-risk.low{background:#E3F2E8;color:var(--leaf);border:1px solid #9ED3B4}
+.perm-risk.medium{background:#FCF3DC;color:#6B4E06;border:1px solid #EAC96A}
+.perm-risk.high{background:#FBE3E1;color:var(--kumkum);border:1px solid #E8A09B}
+.perm-scope{font-family:var(--mono);font-size:12px;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:8px 10px;word-break:break-all;margin:8px 0}
+.perm-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.local-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:760px){.local-grid{grid-template-columns:1fr}}
 footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);background:var(--paper);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 @media(max-width:1100px){.layout{grid-template-columns:220px 1fr}aside.monitor{display:none}}
 @media(max-width:760px){.layout{grid-template-columns:1fr}aside.rail{flex-direction:row;flex-wrap:wrap;align-items:center}.nav{flex-direction:row;flex-wrap:wrap}}
@@ -129,6 +141,7 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
     <div class="rule"></div>
     <nav class="nav" id="nav">
       <button data-v="chat" class="on">💬 Chat / Tasks</button>
+      <button data-v="local">💻 Local PC</button>
       <button data-v="docs">📄 Documents</button>
       <button data-v="kb">📚 Knowledge Base</button>
       <button data-v="agents">🤖 Agents</button>
@@ -151,6 +164,56 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
         <div class="chips" id="routeChips"><span class="chip">auto-route</span><span class="chip">general</span><span class="chip">coding</span><span class="chip">vision</span><span class="chip">document</span></div>
         <div class="row"><span class="hist" id="runHint">offline · sandboxed · audited · 📎 images stay local</span><button class="btn btn-ghost" id="attachBtn" type="button" onclick="document.getElementById('imgInput').click()">📎 Image</button><button class="btn btn-primary" id="runBtn" onclick="runTask()">▶ Run agent</button></div>
       </div></div>
+      <p class="hist">💻 Tip: try “find file report on my machine”, “create an excel sheet”, “modify D:\data\plan.xlsx”, “run node --version” — each sensitive step asks permission first.</p>
+    </section>
+    <section class="view" id="v-local">
+      <div class="eyebrow">Local machine · permission-gated, like OpenCode</div>
+      <h2>Local PC — search, Office, control</h2>
+      <p class="sub">Every sensitive action pauses for your approval: <b>Allow once</b> · <b>Allow always</b> · <b>Reject</b>. “Always” rules are stored in <span style="font-family:var(--mono)">data/permissions.json</span> and audited. Nothing runs silently.</p>
+      <div class="jaali"></div>
+      <h3 style="font-family:var(--serif)">🔎 Search this machine</h3>
+      <div class="local-grid">
+        <input type="text" id="lcQuery" placeholder="e.g. inspection report, invoice, .xlsx"/>
+        <input type="text" id="lcRoots" placeholder="roots (optional, ; separated) — blank = workspace + home"/>
+      </div>
+      <p><label class="hist"><input type="checkbox" id="lcContent"/> also search inside text files</label>
+      <button class="btn btn-ghost" id="lcSearchBtn" onclick="lcSearch()">Search locally</button></p>
+      <div id="lcOut"></div>
+      <div class="jaali"></div>
+      <h3 style="font-family:var(--serif)">📁 Browse / read</h3>
+      <div class="local-grid">
+        <input type="text" id="lcDir" placeholder="folder path, e.g. D:\SovereignAgent\out"/>
+        <input type="text" id="lcFile" placeholder="file path, e.g. D:\SovereignAgent\out\report.docx"/>
+      </div>
+      <p style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="lcList()">List folder</button>
+        <button class="btn btn-ghost" onclick="lcRead()">Read file</button>
+        <button class="btn btn-ghost" onclick="lcOpen()">Open in OS</button>
+      </p>
+      <div class="jaali"></div>
+      <h3 style="font-family:var(--serif)">📊 Office — create &amp; modify</h3>
+      <div class="local-grid">
+        <input type="text" id="lcOfficePath" placeholder="target .docx/.xlsx path (blank = out/ + timestamp)"/>
+        <input type="text" id="lcOfficeText" placeholder="text to append (paragraph or spreadsheet row)"/>
+      </div>
+      <p style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="lcOfficeCreate('xlsx')">＋ New Excel</button>
+        <button class="btn btn-ghost" onclick="lcOfficeCreate('docx')">＋ New Word</button>
+        <button class="btn btn-ghost" onclick="lcOfficeModify()">✎ Append to file</button>
+      </p>
+      <div class="jaali"></div>
+      <h3 style="font-family:var(--serif)">⌨ Run a local command</h3>
+      <div class="local-grid">
+        <input type="text" id="lcCmd" placeholder="program, e.g. node"/>
+        <input type="text" id="lcArgs" placeholder="args, e.g. --version"/>
+      </div>
+      <p><button class="btn btn-ghost" onclick="lcExec()">Run (asks permission)</button> <span class="hist">Spawned without a shell · blocked patterns refused · timeout-killed · output capped.</span></p>
+      <pre class="dump" id="lcExecOut" style="display:none"></pre>
+      <div class="jaali"></div>
+      <h3 style="font-family:var(--serif)">🔐 Saved permissions</h3>
+      <p><button class="btn btn-ghost" onclick="lcPolicy()">Refresh</button>
+      <button class="btn btn-ghost" onclick="lcReset()">Clear all “always” rules</button></p>
+      <div id="lcPolicy"><span class="hist">loading…</span></div>
     </section>
     <section class="view" id="v-docs">
       <div class="eyebrow">Private corpus · never leaves this machine</div>
@@ -173,10 +236,10 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
       <div id="kbOut"></div>
     </section>
     <section class="view" id="v-agents">
-      <div class="eyebrow">Agent foundation · OpenCode-class planner</div>
-      <h2>Agents</h2>
+      <div class="eyebrow">Your AI team · runs only on this machine</div>
+      <h2>Agents — your local helpers in plain words</h2>
       <div class="jaali"></div>
-      <pre class="dump" id="agOut">loading…</pre>
+      <div id="agOut"><span class="hist">loading your local helpers…</span></div>
     </section>
     <section class="view" id="v-audit">
       <div class="eyebrow">Hash-chained operational record · no private thoughts</div>
@@ -186,11 +249,11 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
       <div style="overflow:auto"><table><thead><tr><th>time</th><th>event</th><th>detail</th></tr></thead><tbody id="auBody"></tbody></table></div>
     </section>
     <section class="view" id="v-sec">
-      <div class="eyebrow">Proof, not promises · network-level discipline</div>
-      <h2>Security / Zero-Egress</h2>
+      <div class="eyebrow">Safety proof · did any data leave this machine?</div>
+      <h2>Safety check — in plain words</h2>
       <div class="jaali"></div>
       <div class="toolgrid" id="secGrid"></div>
-      <pre class="dump" id="secOut"></pre>
+      <pre class="dump" id="secOut" style="white-space:pre-wrap">Checking safety…</pre>
     </section>
   </main>
   <aside class="monitor">
@@ -210,6 +273,23 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
   </aside>
 </div>
 <div class="tricolour"></div>
+<!-- opencode-style permission prompt -->
+<div id="permModal" role="dialog" aria-modal="true" aria-labelledby="permTitle">
+  <div class="perm-card">
+    <div class="eyebrow">Permission requested · local only</div>
+    <h2 style="font-family:var(--serif);margin:6px 0" id="permTitle">Allow this action?</h2>
+    <div><span class="perm-risk medium" id="permRisk">medium risk</span>
+    <span class="hist" id="permTool" style="margin-left:8px"></span></div>
+    <div class="perm-scope" id="permScope"></div>
+    <div class="sub" id="permSummary" style="margin:0"></div>
+    <div class="hist" id="permHint">“Allow always” remembers this folder / command so you are not asked again. Revoke anytime under Local PC → Saved permissions. Denials are audited.</div>
+    <div class="perm-btns">
+      <button class="btn btn-primary" id="permOnce">✓ Allow once</button>
+      <button class="btn btn-ghost" id="permAlways">✓✓ Allow always</button>
+      <button class="btn btn-ghost" id="permReject" style="margin-left:auto">✕ Reject</button>
+    </div>
+  </div>
+</div>
 <footer><span>🇮🇳 Swaraj AI · AI for all, from India · runs fully offline on your infrastructure</span><span id="foot">local · sandboxed · audited</span></footer>
 <script>
 const $=id=>document.getElementById(id);
@@ -217,7 +297,7 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   document.querySelectorAll('main.thread section.view').forEach(s=>s.classList.remove('on'));
   $('v-'+b.dataset.v).classList.add('on');
-  if(b.dataset.v==='agents')agents();if(b.dataset.v==='audit')audit();if(b.dataset.v==='sec')sec();if(b.dataset.v==='docs')docs();
+  if(b.dataset.v==='agents')agents();if(b.dataset.v==='audit')audit();if(b.dataset.v==='sec')sec();if(b.dataset.v==='docs')docs();if(b.dataset.v==='local')lcPolicy();
 });
 function tlog(cls,html){const t=$('term');const d=document.createElement('div');d.innerHTML=`<span class="t">${new Date().toLocaleTimeString()}</span> <span class="${cls}">${html}</span>`;t.appendChild(d);t.scrollTop=t.scrollHeight;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -279,6 +359,21 @@ async function handleFiles(list){
   }
 }
 function proseHtml(t){return esc(t||'Done.').split(/\n+/).map(x=>`<p style="margin:6px 0">${x}</p>`).join('');}
+/* ---- Plain-language helpers: never show raw JSON to operators ---- */
+function friendlySource(s){
+  if(s==='ollama')return 'written live by the local model on this machine';
+  if(s==='ollama-fallback')return 'written live by the backup local model on this machine';
+  return 'written from the built-in offline template (local model was unreachable, nothing left this machine)';
+}
+function friendlyTraceHtml(r){
+  const steps=(r.plan||[]).map((p,i)=>`${i+1}. ${p}`).join('\n')||'1. Task handled in one local step';
+  const calcRaw=(r.calc&& (r.calc.output||r.calc.error)||'').trim().slice(0,300)||'no calculation needed';
+  const calcLine=(r.calc&&r.calc.ok)?`Safe calculation finished cleanly in the sandbox. Result: ${calcRaw}`:`Calculation note: ${calcRaw}`;
+  const src=`Answer ${friendlySource(r.replySource)}${r.replyModel?' using '+r.replyModel:''}.`;
+  return `<details><summary class="hist">How this answer was built (in plain words)</summary>`
+    +`<div class="sub" style="margin:8px 0">This is what happened, step by step — all on this machine:</div>`
+    +`<pre class="dump" style="white-space:pre-wrap">${esc(steps)}\n\n${esc(calcLine)}\n${esc(src)}</pre></details>`;
+}
 function jobHtml(r){
   const v=r.verdict||'DONE';
   return `<div class="verdict ${/ACCEPT/i.test(v)?'accept':'review'}">Verdict: ${esc(v)}</div>`+
@@ -289,7 +384,7 @@ function jobHtml(r){
     `<div class="tool"><b>👁 Vision</b><span>${r.vision?r.vision.findings.map(f=>f.label).join(', '):'n/a'}</span></div>`+
     `<div class="tool"><b>🛡 Egress</b><span>${r.egress.externalLLM}/${r.egress.remoteMCP}/${r.egress.externalAPI}/0</span></div></div>`+
     `<div class="arts"><a href="/artifact/${encodeURIComponent(r.docx.path.split(/[\\/]/).pop())}">⬇ ${esc(r.docx.path.split(/[\\/]/).pop())}</a><a href="/artifact/${encodeURIComponent(r.pdf.path.split(/[\\/]/).pop())}">⬇ ${esc(r.pdf.path.split(/[\\/]/).pop())}</a></div>`+
-    `<details><summary class="hist">technical trace</summary><pre class="dump">${esc(JSON.stringify({plan:r.plan,calc:(r.calc.output||r.calc.error||'').trim().slice(0,300),replySource:r.replySource},null,2))}</pre></details>`;
+    friendlyTraceHtml(r);
 }
 function nearBottom(){try{return (document.documentElement.scrollHeight-window.innerHeight-window.scrollY)<200;}catch{return true;}}
 function followBottom(){try{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'auto'});}catch{window.scrollTo(0,document.documentElement.scrollHeight);}}
@@ -338,6 +433,7 @@ async function streamRun(promptToSend,filesToSend){
         const line=chunk.split('\n').find(l=>l.startsWith('data:'));if(!line)continue;
         let ev;try{ev=JSON.parse(line.slice(5).trim());}catch{continue;}
         if(ev.t==='token'){queue+=ev.text||'';}
+        else if(ev.t==='permission'){tlog('warn','🔐 permission needed — '+esc(ev.label||ev.tool)+' · '+esc(ev.scope||''));await askPermission(ev);}
         else if(ev.t==='kind'){if(ev.kind==='code')mode='pre';
           if(ev.route)$('stRoute').textContent=ev.route;if(ev.model)$('stModel').textContent=ev.model;
           who.textContent='Swaraj · '+(ev.model||ev.kind)+' · typing…';}
@@ -356,9 +452,11 @@ async function streamRun(promptToSend,filesToSend){
   if(!r)throw new Error('stream ended without result');
   if(!r.ok){wrap.remove();bubble('Swaraj',esc(r.error||'failed'),'agent');tlog('warn','✖ '+esc(r.error||'failed'));return true;}
   $('stRoute').textContent=r.route.route;$('stModel').textContent=r.route.model;
-  const icons={chat:'◌',qa:'❓',code:'⌨',vision:'👁'};
+  const icons={chat:'◌',qa:'❓',code:'⌨',vision:'👁',local:'💻'};
   let body;
-  if(r.kind==='code'){body=`<pre class="dump">${esc(r.reply||'')}</pre>`;
+  if(r.kind==='local'){body=localHtml(r);
+    tlog('ok',`💻 local · ${(r.steps||[]).length} step(s) · permission-gated`);}
+  else if(r.kind==='code'){body=`<pre class="dump">${esc(r.reply||'')}</pre>`;
     tlog('ok',`⌨ code · ${esc(r.replyModel)} (${esc(r.replySource)}) · no artefacts`);}
   else if(r.kind==='job'){body=jobHtml(r);
     tlog('run',`◆ route → <b>${r.route.route}</b> · ${r.route.model}`);
@@ -383,10 +481,11 @@ async function onceRun(promptToSend,filesToSend){
     if(!r.ok){bubble('Swaraj',esc(r.error||'failed'),'agent');tlog('warn','✖ '+esc(r.error||'failed'));}
     else{
       $('stRoute').textContent=r.route.route;$('stModel').textContent=r.route.model;
-      if(r.kind==='chat'||r.kind==='qa'||r.kind==='code'||r.kind==='vision'){
-        const icons={chat:'◌',qa:'❓',code:'⌨',vision:'👁'};
+      if(r.kind==='chat'||r.kind==='qa'||r.kind==='code'||r.kind==='vision'||r.kind==='local'){
+        const icons={chat:'◌',qa:'❓',code:'⌨',vision:'👁',local:'💻'};
         let body;
-        if(r.kind==='code'){body=`<pre class="dump">${esc(r.reply||'')}</pre>`;}
+        if(r.kind==='local'){body=localHtml(r);}
+        else if(r.kind==='code'){body=`<pre class="dump">${esc(r.reply||'')}</pre>`;}
         else{body=esc(r.reply||'Done.').split(/\n+/).map(p=>`<p style="margin:6px 0">${p}</p>`).join('');}
         bubble('Swaraj · '+esc(r.replyModel||r.route.model),body,'agent');
         tlog('ok',`${icons[r.kind]||'◌'} ${r.kind} · ${esc(r.replyModel)} (${esc(r.replySource)}) · no artefacts`);
@@ -409,7 +508,7 @@ async function onceRun(promptToSend,filesToSend){
         `<div class="tool"><b>👁 Vision</b><span>${r.vision?r.vision.findings.map(f=>f.label).join(', '):'n/a'}</span></div>`+
         `<div class="tool"><b>🛡 Egress</b><span>${r.egress.externalLLM}/${r.egress.remoteMCP}/${r.egress.externalAPI}/0</span></div></div>`+
         `<div class="arts"><a href="/artifact/${encodeURIComponent(r.docx.path.split(/[\\/]/).pop())}">⬇ ${esc(r.docx.path.split(/[\\/]/).pop())}</a><a href="/artifact/${encodeURIComponent(r.pdf.path.split(/[\\/]/).pop())}">⬇ ${esc(r.pdf.path.split(/[\\/]/).pop())}</a></div>`+
-        `<details><summary class="hist">technical trace</summary><pre class="dump">${esc(JSON.stringify({plan:r.plan,calc:(r.calc.output||r.calc.error||'').trim().slice(0,300),replySource:r.replySource},null,2))}</pre></details>`,'agent');
+        friendlyTraceHtml(r),'agent');
       tlog('ok',`✒ reply by ${esc(r.replyModel)} (${esc(r.replySource)})`);
       tlog('ok',`✔ artefacts → ${esc(r.docx.path.split(/[\\/]/).pop())} + ${esc(r.pdf.path.split(/[\\/]/).pop())}`);
       tlog('ok','✔ audit appended · zero-egress 0/0/0/0');
@@ -427,16 +526,190 @@ async function docs(){try{const k=await(await fetch('/api/kb')).json();
   $('docList').innerHTML=`<div class="tool"><b>📚 KB entries</b><span>${k.count} docs</span></div>`;
   const a=await(await fetch('/api/artifacts')).json();
   $('artList').innerHTML=a.files.length?a.files.map(f=>`<a href="/artifact/${encodeURIComponent(f.name)}">⬇ ${esc(f.name)} (${f.bytes}B)</a>`).join(''):'<span class="hist">none yet — run a task</span>';}catch{}}
-async function agents(){$('agOut').textContent=JSON.stringify(await(await fetch('/api/agents')).json(),null,2);}
+function friendlyModelName(m){
+  if(/llama3\.2:1b/i.test(m||''))return m+' — general helper: answers questions and writes notes';
+  if(/qwen2\.5-coder/i.test(m||''))return m+' — technical helper: writes code and does maths';
+  if(/moondream/i.test(m||''))return m+' — eyes: reads photos of welds, gauges and site images';
+  return m||'local model';
+}
+async function agents(){
+  try{
+    const data=await(await fetch('/api/agents')).json();
+    const list=(data&&data.agents)||[];
+    if(!list.length){$('agOut').innerHTML='<div class="tool"><b>No agents running</b><span>Start the workbench to load the local planner.</span></div>';return;}
+    $('agOut').innerHTML=list.map(a=>{
+      const models=(a.models||[]).map(m=>`<div class="tool"><b>🧠 ${esc(m)}</b><span>${esc(friendlyModelName(m).split(' — ')[1]||'local')}</span></div>`).join('');
+      return `<div style="margin-bottom:10px"><div class="tool"><b>🤖 ${esc(a.id||'local agent')}</b>`
+        +`<span>${(a.models||[]).length} local model(s) · all run on this machine, no internet needed</span></div>`
+        +`<div class="toolgrid" style="margin-top:8px">${models}</div>`
+        +`<p class="sub" style="margin:8px 0 0">What this means: when you ask something, the planner picks the right helper above. Your files never leave this computer.</p></div>`;
+    }).join('');
+  }catch(e){$('agOut').innerHTML='<div class="tool"><b>Could not load agents</b><span>Is the workbench running on 127.0.0.1:8080?</span></div>';}
+}
+function friendlyAuditDetail(x){
+  if(x.prompt)return 'Task asked: “'+String(x.prompt).slice(0,80)+'”';
+  if(x.model)return 'Model used: '+x.model;
+  if(x.file)return 'File touched: '+x.file;
+  if(x.docx)return 'Report created: '+x.docx;
+  if(x.route)return 'Work sent to: '+x.route;
+  if(x.doc)return 'Document added: '+x.doc;
+  if(x.count!==undefined)return 'Count: '+x.count+' item(s)';
+  const ev=x.event||x.tool||'activity';
+  return 'Activity: '+String(ev).replace(/_/g,' ');
+}
 async function audit(){const r=await(await fetch('/api/audit')).json();
-  $('auditMeta').textContent=`${r.count} records · chain ${r.verify.ok?'valid ✔':'BROKEN ✖'}`;
-  $('auBody').innerHTML=(r.records||[]).slice(-30).reverse().map(x=>`<tr><td>${(x.ts||'').slice(11,19)}</td><td>${esc(x.event||x.tool||'—')}</td><td>${esc((x.prompt||x.model||x.file||x.docx||x.route||JSON.stringify(x).slice(0,80)))}</td></tr>`).join('');}
+  $('auditMeta').textContent=r.verify&&r.verify.ok?`${r.count} records · safety chain valid ✔ — nobody tampered with the log`:`${r.count} records · safety chain BROKEN ✖ — ask your admin to check`;
+  $('auBody').innerHTML=(r.records||[]).slice(-30).reverse().map(x=>`<tr><td>${(x.ts||'').slice(11,19)}</td><td>${esc((x.event||x.tool||'—').replace(/_/g,' '))}</td><td>${esc(friendlyAuditDetail(x))}</td></tr>`).join('')||'<tr><td colspan="3">No activity yet — run a task to create a record.</td></tr>';}
+function friendlySecurityText(r){
+  const total=(r.externalLLM||0)+(r.remoteMCP||0)+(r.externalAPI||0);
+  const head=total===0?'✔ Your data stayed on this machine. No outside calls were made.':'⚠ Warning: some outside calls were detected — tell your admin.';
+  const keys=(r.cloudKeys&&r.cloudKeys.length)?`Found ${r.cloudKeys.length} cloud password/key(s) in settings (${r.cloudKeys.join(', ')}). Remove them to stay fully offline.`:'No cloud passwords or keys found — good for offline work.';
+  const denials=r.queuedDenials?`${r.queuedDenials} blocked internet attempt(s) were stopped and logged.`:'No blocked internet attempts — nothing tried to phone home.';
+  const kb=(r.kb!==undefined)?` Knowledge base holds ${r.kb} document(s).`:'';
+  return `${head}\n\n• AI over internet: ${r.externalLLM||0} calls (must stay 0)\n• Helpers over internet: ${r.remoteMCP||0} calls (must stay 0)\n• Other internet services: ${r.externalAPI||0} calls (must stay 0)\n• Direct internet traffic: 0 (always blocked)\n\n${keys}\n${denials}${kb}`;
+}
 async function sec(silent){try{const r=await(await fetch('/api/security')).json();
   $('cLLM').textContent=r.externalLLM;$('cMCP').textContent=r.remoteMCP;$('cAPI').textContent=r.externalAPI;$('cNET').textContent=0;
-  $('secGrid').innerHTML=[['External LLM',r.externalLLM],['Remote MCP',r.remoteMCP],['External APIs',r.externalAPI],['Internet traffic',0]].map(([k,v])=>`<div class="tool"><b>${v===0?'🟢':'🔴'} ${k}</b><span>${v} calls</span></div>`).join('');
-  $('secOut').textContent=JSON.stringify(r,null,2);
+  $('secGrid').innerHTML=[['AI over internet — must stay 0',r.externalLLM],['Helpers over internet — must stay 0',r.remoteMCP],['Other internet services',r.externalAPI],['Direct internet traffic — always blocked',0]].map(([k,v])=>`<div class="tool"><b>${v===0?'🟢':'🔴'} ${k}</b><span>${v===0?'none — safe':v+' call(s) — check this'} </span></div>`).join('');
+  $('secOut').textContent=friendlySecurityText(r);
   $('egressBadge').innerHTML=(r.externalLLM+r.remoteMCP+r.externalAPI===0)?'<span class="dot"></span>ZERO-EGRESS · LOCAL ONLY':'⚠ EGRESS DETECTED';
-  if(!silent)tlog('ok','🛡 egress proof refreshed · 0/0/0/0');}catch{}}
+  if(!silent)tlog('ok','🛡 safety check refreshed — all data still local');}catch{}}
+/* ---- opencode-style permissions: allow once / allow always / reject ---- */
+let permQueue=[], permActive=null;
+function askPermission(ev){
+  return new Promise((resolve)=>{
+    permQueue.push({ev,resolve});
+    pumpPerm();
+  });
+}
+function pumpPerm(){
+  if(permActive||!permQueue.length)return;
+  const {ev,resolve}=permQueue.shift();
+  permActive={ev,resolve};
+  $('permTitle').textContent='Allow "'+(ev.label||ev.tool)+'"?';
+  const risk=$('permRisk');risk.textContent=(ev.risk||'medium')+' risk';risk.className='perm-risk '+(ev.risk||'medium');
+  $('permTool').textContent=ev.tool+' · '+new Date(ev.ts||Date.now()).toLocaleTimeString();
+  $('permScope').textContent=ev.scope||'(no path)';
+  $('permSummary').textContent=ev.summary||'The agent wants to touch your local machine.';
+  $('permModal').classList.add('show');
+  tlog('warn','🔐 awaiting your decision — allow once / always / reject');
+}
+async function answerPerm(decision){
+  if(!permActive)return;
+  const {ev,resolve}=permActive;
+  try{
+    const r=await(await fetch('/api/permissions/respond',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestId:ev.id,decision})})).json();
+    if(!r.ok)throw new Error(r.error||'respond failed');
+    tlog(decision==='reject'?'warn':'ok',(decision==='reject'?'✕ rejected · ':'✔ allowed ('+decision+') · ')+esc(ev.tool));
+  }catch(e){tlog('warn','✖ permission reply failed: '+esc(e.message||e));}
+  $('permModal').classList.remove('show');
+  permActive=null;resolve();
+  setTimeout(pumpPerm,50);
+  lcPolicy();
+}
+$('permOnce').onclick=()=>answerPerm('once');
+$('permAlways').onclick=()=>answerPerm('always');
+$('permReject').onclick=()=>answerPerm('reject');
+/* Background watcher: catches direct Local-PC calls (no SSE) too. */
+setInterval(async()=>{
+  if(permActive)return;
+  try{
+    const r=await(await fetch('/api/permissions/pending')).json();
+    const p=(r.pending||[])[0];
+    if(p)askPermission(p);
+  }catch{}
+},1800);
+function localHtml(r){
+  const steps=(r.steps||[]).map(s=>`<div class="tool"><b>💻 Step</b><span>${esc(s)}</span></div>`).join('');
+  let extra='';
+  const L=r.local;
+  if(L&&Array.isArray(L.results)){
+    extra='<div class="toolgrid">'+L.results.slice(0,8).map(h=>`<div class="tool"><b>${esc(h.name)}</b><span>${esc(h.path)}${h.snippet?' · '+esc(h.snippet.slice(0,80)):''}</span></div>`).join('')+'</div>';
+    if(!L.results.length)extra='<p class="sub">No matches — try fewer words or another root.</p>';
+  }else if(L&&L.path){
+    extra=`<div class="arts"><span class="hist">${esc(L.path)}${L.bytes?' · '+L.bytes+'B':''}</span></div>`+(L.text?`<pre class="dump">${esc(String(L.text).slice(0,1500))}</pre>`:'');
+  }else if(L&&L.output!==undefined){
+    extra=`<pre class="dump">${esc(String(L.output||L.error||'').slice(0,1500))}</pre>`;
+  }
+  return proseHtml(r.reply||'Done.')+`<div class="toolgrid">${steps}</div>`+extra;
+}
+/* ---- Local PC panel (direct APIs — each still asks permission) ---- */
+async function lcCall(url,body,btn){
+  if(btn){btn.disabled=true;const o=btn.textContent;btn.textContent='⏳ waiting for permission…';btn._o=o;}
+  try{
+    const r=await(await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})})).json();
+    if(!r.ok)throw new Error(r.error||'failed');
+    return r;
+  }finally{if(btn){btn.disabled=false;btn.textContent=btn._o;}}
+}
+async function lcSearch(){
+  const q=$('lcQuery').value.trim();if(!q)return alert('Type what to find first.');
+  const roots=$('lcRoots').value.split(';').map(s=>s.trim()).filter(Boolean);
+  $('lcOut').innerHTML='<p class="sub">Searching… (approve the prompt if asked)</p>';
+  try{
+    const r=await lcCall('/api/local/search',{query:q,roots:roots.length?roots:undefined,includeContent:$('lcContent').checked},$('lcSearchBtn'));
+    $('lcOut').innerHTML=`<p class="sub">${r.count} match(es) · ${r.scanned} scanned · ${r.tookMs}ms</p>`+
+      (r.results.map(h=>`<div class="msg agent"><div class="who">${esc(h.match==='content'?'📄 content hit':'📄 '+h.name)}</div>${esc(h.path)} <span class="hist">(${(h.size/1024).toFixed(1)}KB)</span>${h.snippet?'<br/>'+esc(h.snippet):''}<br/><button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="lcQuickRead('${esc(h.path).replace(/'/g,"\\'")}')">Read</button></div>`).join('')||'<p class="sub">No matches.</p>');
+    tlog('ok','💻 local search · '+r.count+' hit(s)');
+  }catch(e){$('lcOut').innerHTML=`<p class="sub">Search stopped: ${esc(e.message)}</p>`;tlog('warn','✖ '+esc(e.message));}
+}
+async function lcQuickRead(p){$('lcFile').value=p;lcRead();}
+async function lcList(){
+  const dir=$('lcDir').value.trim()||'.';
+  try{
+    const r=await lcCall('/api/local/list',{dir});
+    $('lcOut').innerHTML=`<p class="sub">${esc(r.dir)} · ${r.count} entries</p><div class="toolgrid">`+r.entries.map(e=>`<div class="tool"><b>${e.dir?'📁 ':'📄 '}${esc(e.name)}</b><span>${esc(e.path)}</span></div>`).join('')+'</div>';
+  }catch(e){alert(e.message);}
+}
+async function lcRead(){
+  const p=$('lcFile').value.trim();if(!p)return alert('Enter a file path.');
+  try{
+    const r=await lcCall('/api/local/read',{path:p});
+    const body=r.rows?('<table>'+r.rows.slice(0,12).map(row=>'<tr>'+row.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table>'):(r.paragraphs||[]).slice(0,12).map(t=>'<p style="margin:4px 0">'+esc(t)+'</p>').join('')||('<pre class="dump">'+esc(String(r.text||'').slice(0,2000))+'</pre>');
+    $('lcOut').innerHTML=`<div class="msg agent"><div class="who">${esc(r.kind||'file')} · ${esc(r.path)} · ${r.bytes}B</div>${body}</div>`;
+  }catch(e){alert(e.message);}
+}
+async function lcOpen(){const p=$('lcFile').value.trim()||$('lcDir').value.trim();if(!p)return alert('Enter a path.');try{await lcCall('/api/local/open',{path:p});tlog('ok','💻 opened '+p);}catch(e){alert(e.message);}}
+async function lcOfficeCreate(kind){
+  const target=$('lcOfficePath').value.trim();
+  const text=$('lcOfficeText').value.trim()||'Drafted locally by Swaraj AI';
+  try{
+    const body=kind==='xlsx'?{kind,rows:[['Item','Value'],[text,new Date().toISOString().slice(0,10)]]}:{kind,paras:[text]};
+    if(target)body.path=target;
+    const r=await lcCall('/api/local/office-create',body);
+    $('lcOut').innerHTML=`<div class="msg agent"><div class="who">Created ${esc(kind)}</div>${esc(r.path)} (${r.bytes}B)</div>`;
+    tlog('ok','💻 created '+r.path);docs();
+  }catch(e){alert(e.message);}
+}
+async function lcOfficeModify(){
+  const target=$('lcOfficePath').value.trim();if(!target)return alert('Enter the .docx/.xlsx path to modify.');
+  const text=$('lcOfficeText').value.trim()||('Update '+new Date().toISOString().slice(0,10));
+  try{
+    const body=/\.xlsx$/i.test(target)?{path:target,appendRows:[[text,new Date().toISOString().slice(0,10)]]}:{path:target,append:[text]};
+    const r=await lcCall('/api/local/office-modify',body);
+    $('lcOut').innerHTML=`<div class="msg agent"><div class="who">Modified</div>${esc(r.path)} (${r.bytes}B)</div>`;
+    tlog('ok','💻 modified '+r.path);
+  }catch(e){alert(e.message);}
+}
+async function lcExec(){
+  const cmd=$('lcCmd').value.trim();if(!cmd)return alert('Enter a program.');
+  const args=$('lcArgs').value.trim().split(/\s+/).filter(Boolean);
+  $('lcExecOut').style.display='block';$('lcExecOut').textContent='running… (approve the prompt if asked)';
+  try{
+    const r=await lcCall('/api/local/exec',{cmd,args});
+    $('lcExecOut').textContent=(r.ok?'$ '+cmd+' '+args.join(' ')+'\n\n':'FAILED: '+(r.error||'')+'\n\n')+(r.output||'');
+    tlog(r.ok?'ok':'warn','💻 exec '+cmd+' → '+(r.ok?'ok':'failed'));
+  }catch(e){$('lcExecOut').textContent='stopped: '+e.message;}
+}
+async function lcPolicy(){
+  try{
+    const r=await(await fetch('/api/permissions/policy')).json();
+    const rules=r.rules||[];
+    $('lcPolicy').innerHTML=rules.length?rules.map(x=>`<div class="tool"><b>${x.decision==='allow'?'✓':'✕'} ${esc(x.tool)}</b><span>${esc(x.scope)}</span><br/><button class="btn btn-ghost" style="padding:2px 10px;font-size:12px" onclick="lcRevoke('${x.id}')">Revoke</button></div>`).join(''):'<span class="hist">No “always” rules yet — every sensitive step will ask.</span>';
+  }catch{$('lcPolicy').innerHTML='<span class="hist">unavailable</span>';}
+}
+async function lcRevoke(id){await fetch('/api/permissions/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ruleId:id})});lcPolicy();}
+async function lcReset(){if(!confirm('Forget all “allow always” rules?'))return;await fetch('/api/permissions/reset',{method:'POST'});lcPolicy();}
 loadStore();paintThread();renderHist();
 docs();sec(true);
 $('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runTask();}});

@@ -9,7 +9,10 @@
     "start": "node src/server.js",
     "workbench": "node scripts/workbench.js",
     "demo": "node scripts/golden-path.js",
-    "security": "node scripts/egress-check.js"
+    "security": "node scripts/egress-check.js",
+    "package:desktop": "node scripts/package-desktop.js",
+    "desktop:list": "node scripts/package-desktop.js --list",
+    "desktop": "node scripts/workbench.js"
   },
   "engines": {
     "node": ">=18"

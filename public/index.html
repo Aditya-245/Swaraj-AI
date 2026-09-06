@@ -40,8 +40,6 @@ nav.scrolled{background:rgba(255,253,248,.94);box-shadow:0 8px 30px rgba(20,22,4
 .links a{text-decoration:none;font-size:13.8px;font-weight:550;color:var(--ink2);padding:8px 13px;border-radius:999px;transition:.2s}
 .links a:hover{background:var(--sand);color:var(--ink)}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.live{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.4px;padding:7px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--ink2)}
-.live i{width:8px;height:8px;border-radius:50%;background:var(--leaf);box-shadow:0 0 0 4px rgba(23,114,69,.15);animation:pulse 2s infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(23,114,69,.06)}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:999px;padding:12px 24px;font-weight:700;font-size:14.5px;cursor:pointer;text-decoration:none;transition:transform .18s var(--ease),box-shadow .18s,filter .18s;white-space:nowrap}
 .btn-saffron{background:linear-gradient(180deg,#F07C2E,var(--saffron2));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 10px 26px rgba(233,106,31,.35)}
@@ -217,13 +215,32 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
 .foot-note{font-size:13px;color:var(--muted);max-width:36ch}
 .foot-base{max-width:1240px;margin:0 auto;padding:14px 22px 22px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line)}
 .jaali{height:12px;background-image:radial-gradient(circle,var(--saffron) 1.4px,transparent 1.5px);background-size:13px 13px;opacity:.3;margin:26px 0;border-radius:99px}
+/* download */
+.dl-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;align-items:start}
+.dl-card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:0 10px 34px rgba(20,22,43,.07)}
+.dl-card.hero-dl{background:linear-gradient(135deg,#191C44,#2E3EC8 55%,#E96A1F 130%);color:#fff;border:0;position:relative;overflow:hidden}
+.dl-card.hero-dl::after{content:"⬇";position:absolute;right:10px;bottom:-38px;font-size:200px;opacity:.12;line-height:1}
+.dl-ver{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);padding:5px 12px;border-radius:999px;display:inline-block}
+.dl-card.hero-dl h3{font-family:var(--serif);font-size:30px;margin:10px 0 6px;line-height:1.15}
+.dl-card.hero-dl p{color:#D9DCF5;margin:0 0 16px;max-width:46ch}
+.os-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.os-btn{flex:1;min-width:150px;background:#fff;color:var(--ink);border-radius:16px;padding:14px;border:1px solid var(--line);cursor:pointer;text-align:left;font-family:inherit;transition:.2s;position:relative}
+.os-btn:hover{border-color:var(--saffron2);transform:translateY(-2px);box-shadow:0 10px 26px rgba(233,106,31,.18)}
+.os-btn.rec{border-color:var(--saffron2);box-shadow:0 0 0 2px rgba(233,106,31,.25)}
+.os-btn b{display:block;font-size:15px}
+.os-btn small{color:var(--muted);font-size:12px}
+.os-btn .rec-tag{position:absolute;top:-10px;right:10px;background:var(--saffron);color:#fff;font-size:10px;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:999px}
+.sha-box{font-family:var(--mono);font-size:11.5px;background:var(--cream);border:1px dashed var(--line2);border-radius:12px;padding:10px 12px;word-break:break-all;color:var(--ink2);margin-top:10px}
+.steps-mini{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--ink2)}
+.steps-mini li{display:flex;gap:10px;align-items:flex-start;background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.steps-mini b{color:var(--ink)}
 /* toast */
 #toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,80px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:13.5px;transition:.35s var(--ease);z-index:200;opacity:0;box-shadow:0 16px 40px rgba(0,0,0,.3)}
 #toast.show{transform:translate(-50%,0);opacity:1}
 /* responsive */
 @media(max-width:1020px){
   .hero-in{grid-template-columns:1fr} .visual{min-height:500px}
-  .grid6{grid-template-columns:1fr 1fr} .path-wrap,.arch,.lang-grid,.sec-grid,.cta-in{grid-template-columns:1fr}
+  .grid6{grid-template-columns:1fr 1fr} .path-wrap,.arch,.lang-grid,.sec-grid,.cta-in,.dl-grid{grid-template-columns:1fr}
   .links{display:none} .burger{display:block}
   .links.open{display:flex;position:absolute;top:64px;left:12px;right:12px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:10px;flex-direction:column;box-shadow:var(--shadow)}
   .foot-in{grid-template-columns:1fr 1fr}
@@ -246,9 +263,10 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
       <a href="#architecture">Architecture</a>
       <a href="#languages">Bharat First</a>
       <a href="#security">Security</a>
+      <a href="#download">Download</a>
     </div>
     <div class="nav-right">
-      <span class="live" id="livePill"><i></i><span id="liveTxt">LOCAL · CHECKING…</span></span>
+      <a class="btn btn-ghost btn-sm" href="#download" data-magnet>⬇ Download</a>
       <a class="btn btn-saffron btn-sm" href="/workbench.html" data-magnet>Launch Workbench →</a>
       <button class="burger" id="burger" aria-label="menu">☰</button>
     </div>
@@ -266,11 +284,11 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
       <div class="type-line"><b>❖ swaraj &gt;</b><span id="typer"></span><span class="caret"></span></div>
       <p class="lead">A private AI employee that runs <strong>inside your infrastructure</strong>. Local open-weight models, private RAG on your SOPs, sandboxed code, DOCX + PDF deliverables, and a <strong>hash-chained audit</strong> — with network-level proof that nothing ever leaves.</p>
       <div class="cta-row">
-        <a class="btn btn-saffron" href="/workbench.html" data-magnet>▶&nbsp; Launch Workbench</a>
-        <a class="btn btn-ink" href="#golden" data-magnet>See the Golden Path</a>
+        <a class="btn btn-saffron" href="#download" data-magnet>⬇&nbsp; Download for Desktop</a>
+        <a class="btn btn-ink" href="/workbench.html" data-magnet>▶&nbsp; Launch Workbench</a>
         <a class="btn btn-ghost" href="#security" data-magnet>🛡 Zero-egress proof</a>
       </div>
-      <div class="micro"><span>✔ No cloud keys</span><span>✔ No npm install</span><span>✔ Stdlib-only server</span><span>✔ Ollama · Qdrant · Postgres ready</span></div>
+      <div class="micro"><span>✔ Windows · Linux · macOS</span><span>✔ No npm install</span><span>✔ Stdlib-only server</span><span>✔ Ollama · Qdrant · Postgres ready</span></div>
       <div class="stats">
         <div class="stat saff"><b><span data-count="100">0</span>%</b><small>Local execution</small></div>
         <div class="stat leaf"><b><span data-count="0">0</span></b><small>External calls</small></div>
@@ -431,6 +449,49 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
   </div>
 </section>
 
+<!-- ============ DOWNLOAD ============ -->
+<section class="block" id="download">
+  <div class="eyebrow">07 · Download — the entire agent, for your desktop</div>
+  <h2 class="sec">Take Swaraj AI <i style="color:var(--saffron2)">inside your walls.</i></h2>
+  <p class="sub">One universal ZIP for <b>Windows · Linux · macOS</b> — the full workbench, website, local planner, private RAG, sandbox and audit. Double-click to run. No cloud, no signup. Served live from this server via <span style="font-family:var(--mono);font-size:13px;background:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:99px">GET /api/download</span>.</p>
+  <div class="dl-grid">
+    <div class="dl-card hero-dl reveal">
+      <span class="dl-ver" id="dlVer">● checking build…</span>
+      <h3>Swaraj AI Desktop<br/>स्वराज, आपकी मशीन पर</h3>
+      <p id="dlMeta">Contacting this server for the latest build…</p>
+      <div class="os-row" id="osRow">
+        <button class="os-btn" data-os="windows"><b>🪟 Windows</b><small>SwarajAI.bat · double-click</small></button>
+        <button class="os-btn" data-os="linux"><b>🐧 Linux</b><small>./SwarajAI.sh</small></button>
+        <button class="os-btn" data-os="macos"><b>🍎 macOS</b><small>./SwarajAI.sh</small></button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1">
+        <a class="btn btn-saffron" id="dlMainBtn" href="#download" data-magnet>⬇ Download Desktop ZIP</a>
+        <button class="btn btn-ghost" id="dlShaBtn">⧉ Copy SHA-256</button>
+      </div>
+      <div class="sha-box" id="dlSha">sha256: …</div>
+      <div style="font-family:var(--mono);font-size:11.5px;color:#D9DCF5;margin-top:10px" id="dlSize">size: … · requires Node 18+ · ~300MB free</div>
+    </div>
+    <div class="dl-card reveal">
+      <div style="font-size:11px;letter-spacing:2px;font-weight:800;color:var(--muted)">RUN IT IN 3 STEPS · OFFLINE</div>
+      <ol class="steps-mini">
+        <li><span>📦</span><span><b>1 · Download &amp; extract.</b> <span id="dlStep1">Grab the ZIP above</span> anywhere — Desktop, USB stick, air-gapped share.</span></li>
+        <li><span>▶</span><span><b>2 · Double-click to launch.</b> Windows: <span style="font-family:var(--mono)">SwarajAI.bat</span> · Linux/Mac: <span style="font-family:var(--mono)">chmod +x SwarajAI.sh &amp;&amp; ./SwarajAI.sh</span></span></li>
+        <li><span>🛡</span><span><b>3 · Verify zero-egress.</b> Open <span style="font-family:var(--mono)">/api/security</span> — counters stay <b>0/0/0/0</b>, even with the network cable pulled.</span></li>
+      </ol>
+      <div class="jaali"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="badge-local">✔ NO NPM INSTALL NEEDED</span>
+        <span style="font-size:12.5px;color:var(--muted)">Stdlib-only server · optional Ollama for AI replies</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" id="dlVerifyBtn">⧉ Copy verify command</button>
+        <a class="btn btn-ghost btn-sm" href="/api/download" target="_blank">{} API manifest</a>
+      </div>
+      <div class="sha-box" id="dlVerifyCmd">…</div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ CTA ============ -->
 <div class="cta"><div class="cta-in reveal">
   <div style="position:relative;z-index:1">
@@ -438,7 +499,8 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
     <h2>Bring the workbench<br/>inside your walls.</h2>
     <p>One command. No cloud. Your SOPs, your models, your proof — running on <span style="font-family:var(--mono)">http://127.0.0.1:8080</span>.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <a class="btn btn-saffron" href="/workbench.html" data-magnet>▶ Launch Workbench</a>
+      <a class="btn btn-saffron" href="#download" data-magnet>⬇ Download for Desktop</a>
+      <a class="btn btn-ghost" href="/workbench.html" data-magnet>▶ Launch Workbench</a>
       <button class="btn btn-ghost" id="cmdBtn" data-magnet>⧉ Copy: npm start</button>
     </div>
     <div style="font-family:var(--mono);font-size:12px;color:#D9DCF5;margin-top:12px">$ npm test &nbsp;·&nbsp; $ npm run demo &nbsp;·&nbsp; $ npm start</div>
@@ -451,9 +513,9 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
 <footer>
   <div class="foot-in">
     <div><div class="foot-brand">Swaraj AI <span style="color:var(--saffron2)">स्वराज</span></div><p class="foot-note">Sovereign Industrial AI Workbench. A private AI employee running inside company infrastructure — on-prem, air-gapped, local / open-weight.</p><p class="foot-note" style="font-family:var(--mono);font-size:12px">SIH26117 · stdlib-only · offline-first</p></div>
-    <div><h5>Product</h5><a href="#capabilities">Capabilities</a><a href="#golden">Golden path</a><a href="#architecture">Architecture</a><a href="/workbench.html">Launch workbench →</a></div>
+    <div><h5>Product</h5><a href="#capabilities">Capabilities</a><a href="#golden">Golden path</a><a href="#architecture">Architecture</a><a href="#download">⬇ Download desktop</a><a href="/workbench.html">Launch workbench →</a></div>
     <div><h5>Trust</h5><a href="#security">Zero-egress proof</a><a href="/workbench.html">Audit logs</a><a href="#models">Open-weight fleet</a><a href="#languages">Bharat languages</a></div>
-    <div><h5>Run it</h5><a href="/api/health">GET /api/health</a><a href="/api/security">GET /api/security</a><a href="/api/agents">GET /api/agents</a><a href="/api/audit">GET /api/audit</a></div>
+    <div><h5>Run it</h5><a href="/api/health">GET /api/health</a><a href="/api/security">GET /api/security</a><a href="/api/download">GET /api/download ⬇</a><a href="/api/agents">GET /api/agents</a><a href="/api/audit">GET /api/audit</a></div>
   </div>
   <div class="foot-base"><span>🇮🇳 Swaraj AI · AI for all, from India · runs fully offline on your infrastructure</span><span id="footStat">local · sandboxed · audited · <span id="year"></span></span></div>
   <div class="tricolour"></div>
@@ -581,26 +643,32 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
   var auto=setInterval(function(){if(!document.hidden&&!typing)show((si+1)%STAGES.length);},5200);
   $('replayBtn').onclick=function(){show(si);toast('Replaying stage '+(si+1)+' trace…');};
 
-  /* ===== live security ===== */
+  /* ===== live security — plain words, no JSON ===== */
+  function friendlySecText(r){
+    var total=(r.externalLLM||0)+(r.remoteMCP||0)+(r.externalAPI||0);
+    var head=total===0?'✔ Your data stayed on this machine. No outside calls were made.':'⚠ Warning: outside calls detected — tell your admin.';
+    var keys=(r.cloudKeys&&r.cloudKeys.length)?('Found '+r.cloudKeys.length+' cloud password/key(s) in settings ('+r.cloudKeys.join(', ')+'). Remove them to stay fully offline.'):'No cloud passwords or keys found — good for offline work.';
+    var denials=r.queuedDenials?(r.queuedDenials+' blocked internet attempt(s) were stopped and logged.'):'No blocked internet attempts — nothing tried to phone home.';
+    var kb=(r.kb!==undefined)?(' Knowledge base holds '+r.kb+' document(s).'):'';
+    return head+'\n\n• AI over internet: '+(r.externalLLM||0)+' calls (must stay 0)\n• Helpers over internet: '+(r.remoteMCP||0)+' calls (must stay 0)\n• Other internet services: '+(r.externalAPI||0)+' calls (must stay 0)\n• Direct internet traffic: 0 (always blocked)\n\n'+keys+'\n'+denials+kb;
+  }
   function paintSec(r){
     $('sLLM').textContent=r.externalLLM;$('sMCP').textContent=r.remoteMCP;$('sAPI').textContent=r.externalAPI;
     $('cLLM').textContent=r.externalLLM;$('cMCP').textContent=r.remoteMCP;$('cAPI').textContent=r.externalAPI;
     var ok=(r.externalLLM+r.remoteMCP+r.externalAPI)===0;
-    $('secBadge').textContent=ok?'● ZERO-EGRESS · LOCAL ONLY':'⚠ EGRESS DETECTED';
+    $('secBadge').textContent=ok?'● SAFE — ALL DATA STAYED HERE':'⚠ CHECK NEEDED — OUTSIDE CALL FOUND';
     $('secBadge').style.background=ok?'#DDEFE3':'#FBE3E1';$('secBadge').style.color=ok?'#177245':'#B3261E';
-    $('secMeta').textContent='verified '+new Date().toLocaleTimeString()+' · cloudKeys '+(r.cloudKeys&&r.cloudKeys.length?r.cloudKeys.length:'0')+' · denials '+(r.queuedDenials||0);
-    $('proofLine').textContent=(ok?'✔':'⚠')+' egress '+r.externalLLM+'/'+r.remoteMCP+'/'+r.externalAPI+'/0 · internet 0 · '+(ok?'proof holds — nothing left this machine.':'investigate immediately.');
-    $('secDump').textContent=JSON.stringify(r,null,2);
-    $('liveTxt').textContent='LOCAL · KB '+(r.kb||'—');
+    $('secMeta').textContent='checked at '+new Date().toLocaleTimeString()+' · cloud passwords found: '+((r.cloudKeys&&r.cloudKeys.length)?r.cloudKeys.length:'0')+' · blocked attempts: '+(r.queuedDenials||0);
+    $('proofLine').textContent=(ok?'✔ Safe: 0 outside calls — nothing left this machine.':'⚠ Attention needed — investigate immediately.');
+    $('secDump').textContent=friendlySecText(r);
   }
   function fetchSec(){
     fetch('/api/security').then(function(x){return x.json();}).then(function(r){
       fetch('/api/health').then(function(h){return h.json();}).then(function(h){r.kb=h.kb;paintSec(r);}).catch(function(){paintSec(r);});
     }).catch(function(){
-      $('secMeta').textContent='offline preview — start server: npm start';
-      $('secDump').textContent='{\n  "zeroEgress": true,\n  "externalLLM": 0,\n  "remoteMCP": 0,\n  "externalAPI": 0,\n  "internet": 0,\n  "note": "run `npm start`, then re-verify"\n}';
+      $('secMeta').textContent='preview mode — start the server with: npm start';
+      $('secDump').textContent='✔ Safety preview (server not running yet).\n\n• AI over internet: 0 calls\n• Helpers over internet: 0 calls\n• Other internet services: 0 calls\n• Direct internet traffic: 0\n\nRun `npm start`, then press Re-verify to check the live machine.';
       $('sLLM').textContent='0';$('sMCP').textContent='0';$('sAPI').textContent='0';
-      $('liveTxt').textContent='OFFLINE PREVIEW';
     });
   }
   $('secBtn').onclick=function(){fetchSec();toast('Re-verified against /api/security');};
@@ -617,6 +685,57 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
   /* copy buttons */
   $('copyBtn').onclick=function(){var s='egress: externalLLM=0 remoteMCP=0 externalAPI=0 internet=0 — Swaraj AI zero-egress proof';if(navigator.clipboard)navigator.clipboard.writeText(s);toast('Zero-egress snippet copied ✔');};
   $('cmdBtn').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText('npm start');toast('Copied: npm start — workbench on 127.0.0.1:8080');};
+
+  /* ===== desktop download (served live from this server) ===== */
+  var dlFile=null;
+  function fmtMB(b){if(!b&&b!==0)return'…';var mb=b/1048576;return (mb<10?mb.toFixed(1):Math.round(mb))+' MB';}
+  function detectOS(){var p=(navigator.platform||'').toLowerCase(),ua=(navigator.userAgent||'').toLowerCase();
+    if(/mac|iphone|ipad/.test(p)||/mac os/.test(ua))return 'macos';
+    if(/linux/.test(p)||/linux/.test(ua))return 'linux';
+    return 'windows';}
+  function markOS(os){
+    document.querySelectorAll('#osRow .os-btn').forEach(function(b){
+      b.classList.toggle('rec',b.getAttribute('data-os')===os);
+      var old=b.querySelector('.rec-tag');if(old)old.remove();
+      if(b.getAttribute('data-os')===os){var s=document.createElement('span');s.className='rec-tag';s.textContent='YOUR OS';b.appendChild(s);}
+    });
+  }
+  document.querySelectorAll('#osRow .os-btn').forEach(function(b){
+    b.onclick=function(){
+      var os=b.getAttribute('data-os');markOS(os);
+      var hints={windows:'Windows: extract → double-click SwarajAI.bat',linux:'Linux: unzip → chmod +x SwarajAI.sh && ./SwarajAI.sh',macos:'macOS: unzip → chmod +x SwarajAI.sh && ./SwarajAI.sh'};
+      $('dlMeta').textContent=hints[os]+' · full agent, offline, Node 18+.';
+      if(dlFile)toast(hints[os]);
+    };
+  });
+  function paintDl(m){
+    var f=(m.files&&m.files[0])||null;dlFile=f;
+    if(!f){$('dlVer').textContent='● v'+(m.version||'?')+' · build pending';
+      $('dlMeta').textContent='No ZIP on this server yet — run: npm run package:desktop, then refresh.';
+      $('dlSha').textContent='sha256: (build pending)';$('dlSize').textContent='size: …';
+      $('dlMainBtn').setAttribute('href','#download');return;}
+    $('dlVer').textContent='● v'+m.version+' · universal ZIP · '+(m.builtAt||'').slice(0,10);
+    $('dlMeta').textContent='Entire Swaraj AI agent · '+fmtMB(f.bytes)+' · Windows / Linux / macOS · offline after install.';
+    $('dlMainBtn').setAttribute('href',f.url);
+    $('dlMainBtn').textContent='⬇ Download v'+m.version+' ('+fmtMB(f.bytes)+')';
+    $('dlStep1').textContent='Grab v'+m.version+' ('+fmtMB(f.bytes)+') above';
+    $('dlSha').textContent='sha256: '+(f.sha256||'(see '+f.name+'.sha256)');
+    $('dlSize').textContent='size: '+fmtMB(f.bytes)+' ('+f.bytes+' bytes) · requires Node 18+ · ~300MB free';
+    var ua=(navigator.userAgent||'').toLowerCase(),cmd;
+    if(/windows/.test(ua))cmd='certutil -hashfile '+f.name+' SHA256';
+    else if(/mac/.test(ua))cmd='shasum -a 256 '+f.name;
+    else cmd='sha256sum '+f.name;
+    $('dlVerifyCmd').textContent='$ '+cmd+'  # must match the SHA above';
+    $('dlVerifyCmd')._cmd=cmd;
+    markOS(detectOS());
+  }
+  fetch('/api/download').then(function(x){return x.json();}).then(paintDl).catch(function(){
+    $('dlVer').textContent='● offline preview';
+    $('dlMeta').textContent='Start the server (npm start) to download the desktop ZIP from this page.';
+    markOS(detectOS());
+  });
+  $('dlShaBtn').onclick=function(){if(dlFile&&dlFile.sha256&&navigator.clipboard)navigator.clipboard.writeText(dlFile.sha256);toast(dlFile?'SHA-256 copied ✔':'No build yet — run npm run package:desktop');};
+  $('dlVerifyBtn').onclick=function(){var c=$('dlVerifyCmd')._cmd;if(c&&navigator.clipboard)navigator.clipboard.writeText(c);toast('Verify command copied ✔');};
 })();
 </script>
 </body>

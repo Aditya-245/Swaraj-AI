@@ -9,6 +9,8 @@ module.exports = {
   Orchestrator: require('./orchestrator').Orchestrator,
   OllamaClient: require('./ollama').OllamaClient,
   makeTools: require('./tools').makeTools,
+  PermissionManager: require('./permissions').PermissionManager,
+  localMachine: require('./local-machine'),
   documents: require('./documents'),
   deliver: require('./deliver'),
 };

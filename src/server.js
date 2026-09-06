@@ -10,13 +10,35 @@ const { RagIndex } = require('./rag');
 const { AuditTrail } = require('./audit');
 const { EgressGuard } = require('./egress');
 const { Orchestrator } = require('./orchestrator');
-const { initDb, getPool } = require('./db');
-const auth = require('./auth');
+// Optional deps (pg / bcryptjs) enable login + task history. The core
+// agent is stdlib-only: when they are not installed (e.g. a fresh
+// desktop-ZIP extract with no `npm install`), auth routes report 503
+// and everything else — chat, RAG, sandbox, artefacts, audit, downloads —
+// keeps working offline.
+let initDb, getPool, auth;
+try {
+  ({ initDb, getPool } = require('./db'));
+} catch (e) {
+  initDb = async () => { throw new Error('optional dependency missing: pg (run `npm install` for login/history)'); };
+  getPool = () => { throw new Error('user database unavailable'); };
+}
+try {
+  auth = require('./auth');
+} catch (e) {
+  const needInstall = () => { throw Object.assign(new Error('auth unavailable — run `npm install` for login/history'), { status: 503 }); };
+  auth = {
+    providers: () => ({ google: false, github: false }),
+    register: needInstall, login: needInstall, createSession: needInstall,
+    userFromToken: async () => null, destroySession: async () => {},
+    oauthStart: needInstall, oauthCallback: needInstall,
+    sessionCookie: () => '', clearCookie: () => '', readCookie: () => null,
+  };
+}
 
 // PostgreSQL (users, sessions, task history). Auth routes wait for it;
 // the rest of the workbench keeps working even if the DB is down.
 const dbReady = initDb().catch((e) => {
-  console.error('PostgreSQL unavailable — auth disabled:', e.message);
+  console.error('PostgreSQL unavailable — auth disabled:', (e && e.message) || e);
   return null;
 });
 async function needDb(res) {
@@ -30,6 +52,7 @@ const DATA = path.join(ROOT, 'data');
 const OUT = path.join(ROOT, 'out');
 const PUB = path.join(ROOT, 'public');
 const UPLOADS = path.join(DATA, 'uploads');
+const DIST = path.join(ROOT, 'dist');
 fs.mkdirSync(DATA, { recursive: true });
 fs.mkdirSync(OUT, { recursive: true });
 fs.mkdirSync(UPLOADS, { recursive: true });
@@ -37,7 +60,9 @@ fs.mkdirSync(UPLOADS, { recursive: true });
 const rag = new RagIndex();
 const audit = new AuditTrail(path.join(DATA, 'audit.jsonl'));
 const egress = new EgressGuard();
-const orch = new Orchestrator({ rag, audit, egress, outDir: OUT });
+const { PermissionManager } = require('./permissions');
+const permissions = new PermissionManager({ filePath: path.join(DATA, 'permissions.json'), audit });
+const orch = new Orchestrator({ rag, audit, egress, outDir: OUT, permissions });
 
 // Seed KB from data/*.txt + data/*.md if present
 try {
@@ -55,10 +80,52 @@ if (rag.count() === 0) {
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
   '.gif': 'image/gif', '.bmp': 'image/bmp', '.tif': 'image/tiff', '.tiff': 'image/tiff',
-  '.pdf': 'application/pdf',
+  '.pdf': 'application/pdf', '.zip': 'application/zip', '.sha256': 'text/plain',
   '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation' };
+
+// ---- Desktop downloads: dist/SwarajAI-desktop-*.zip built by scripts/package-desktop.js ----
+function listDesktopBuilds() {
+  try {
+    const manifestPath = path.join(DIST, 'latest.json');
+    if (fs.existsSync(manifestPath)) {
+      const m = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      // Refresh byte counts in case dist was rebuilt without restarting the server.
+      for (const f of (m.files || [])) {
+        try {
+          const fp = path.join(DIST, path.basename(f.name));
+          if (fs.existsSync(fp)) f.bytes = fs.statSync(fp).size;
+        } catch {}
+      }
+      return { ok: true, manifest: true, ...m };
+    }
+  } catch {}
+  // Fallback: live directory listing when no manifest was built yet.
+  let files = [];
+  try {
+    files = fs.existsSync(DIST) ? fs.readdirSync(DIST).filter((f) => /^SwarajAI-desktop-.*\.zip$/.test(f)).sort().reverse() : [];
+  } catch { files = []; }
+  let version = '0.1.0';
+  try { version = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version || version; } catch {}
+  return {
+    ok: true, manifest: false, name: 'Swaraj AI — Desktop', version, builtAt: null,
+    requires: { node: '>=18', disk: '~300MB free', network: 'none (offline after install)' },
+    note: files.length ? undefined : 'No build yet — run: npm run package:desktop',
+    files: files.map((name) => {
+      const fp = path.join(DIST, name);
+      let bytes = 0;
+      try { bytes = fs.statSync(fp).size; } catch {}
+      let sha256 = null;
+      try {
+        const sidecar = fp + '.sha256';
+        if (fs.existsSync(sidecar)) sha256 = fs.readFileSync(sidecar, 'utf8').trim().split(/\s+/)[0] || null;
+      } catch {}
+      return { name, url: `/download/${encodeURIComponent(name)}`, bytes, sha256, platforms: ['windows', 'linux', 'macos'], universal: true };
+    }),
+    launchers: { windows: 'SwarajAI.bat (or Start-SwarajAI.ps1)', linux: './SwarajAI.sh', macos: './SwarajAI.sh' },
+  };
+}
 
 function send(res, code, body, type = 'application/json') {
   let b;
@@ -135,10 +202,135 @@ const server = http.createServer(async (req, res) => {
         queuedDenials: egress.events.length,
       });
     }
+    // ---- Permissions (opencode-style: allow once / allow always / reject) ----
+    if (req.method === 'GET' && url.pathname === '/api/permissions/policy') {
+      return send(res, 200, { ok: true, ...permissions.listPolicy() });
+    }
+    if (req.method === 'GET' && url.pathname === '/api/permissions/pending') {
+      return send(res, 200, { ok: true, pending: permissions.listPending() });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/permissions/respond') {
+      const b = await readBody(req);
+      if (b === null) return send(res, 400, { ok: false, error: 'payload too large' });
+      try {
+        const r = permissions.respond(b.requestId, b.decision);
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) {
+        return send(res, e.code === 'PERMISSION_NOT_FOUND' ? 404 : 400, { ok: false, error: e.message, code: e.code });
+      }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/permissions/revoke') {
+      const b = await readBody(req);
+      if (!b || !b.ruleId) return send(res, 400, { ok: false, error: 'need {ruleId}' });
+      const ok = permissions.revoke(b.ruleId);
+      return send(res, ok ? 200 : 404, { ok, ruleId: b.ruleId });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/permissions/reset') {
+      permissions.clear();
+      return send(res, 200, { ok: true });
+    }
+    // ---- Local machine (direct APIs; each waits for permission like the agent) ----
+    const permErr = (e) => {
+      const code = e && e.code;
+      if (code === 'PERMISSION_DENIED') return send(res, 403, { ok: false, error: e.message, code, tool: e.tool, scope: e.scope, requestId: e.requestId });
+      if (code === 'PERMISSION_TIMEOUT') return send(res, 408, { ok: false, error: e.message, code, requestId: e.requestId });
+      return send(res, 400, { ok: false, error: String((e && e.message) || e).slice(0, 500) });
+    };
+    if (req.method === 'POST' && url.pathname === '/api/local/search') {
+      const b = await readBody(req);
+      if (b === null) return send(res, 400, { ok: false, error: 'payload too large' });
+      try {
+        orch.tools.__setProg(null);
+        const r = await orch.tools.local_search(b || {});
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/local/list') {
+      const b = await readBody(req);
+      try {
+        orch.tools.__setProg(null);
+        const r = await orch.tools.local_list(b || {});
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/local/read') {
+      const b = await readBody(req);
+      if (!b || (!b.path && !b.file)) return send(res, 400, { ok: false, error: 'need {path}' });
+      try {
+        orch.tools.__setProg(null);
+        const isOffice = /\.(docx|xlsx|pptx)$/i.test(b.path || b.file || '');
+        const r = isOffice ? await orch.tools.office_read(b) : await orch.tools.local_read(b);
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/local/office-create') {
+      const b = await readBody(req);
+      try {
+        orch.tools.__setProg(null);
+        const r = await orch.tools.office_create(b || {});
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/local/office-modify') {
+      const b = await readBody(req);
+      try {
+        orch.tools.__setProg(null);
+        const r = await orch.tools.office_modify(b || {});
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/local/write') {
+      const b = await readBody(req);
+      try {
+        orch.tools.__setProg(null);
+        const r = await orch.tools.local_write(b || {});
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/local/exec') {
+      const b = await readBody(req);
+      try {
+        orch.tools.__setProg(null);
+        const r = await orch.tools.shell_exec(b || {});
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
+    if (req.method === 'POST' && url.pathname === '/api/local/open') {
+      const b = await readBody(req);
+      try {
+        orch.tools.__setProg(null);
+        const r = await orch.tools.open_path(b || {});
+        return send(res, 200, { ok: true, ...r });
+      } catch (e) { return permErr(e); }
+    }
     if (req.method === 'GET' && url.pathname === '/api/artifacts') {
       const files = fs.existsSync(OUT) ? fs.readdirSync(OUT).filter((f) => !f.startsWith('.'))
         .map((f) => ({ name: f, bytes: fs.statSync(path.join(OUT, f)).size })) : [];
       return send(res, 200, { count: files.length, files });
+    }
+    if (req.method === 'GET' && (url.pathname === '/api/download' || url.pathname === '/api/download/latest.json')) {
+      return send(res, 200, listDesktopBuilds());
+    }
+    if (req.method === 'GET' && url.pathname.startsWith('/download/')) {
+      const name = path.basename(decodeURIComponent(url.pathname.slice('/download/'.length)));
+      // Strict allowlist: only our desktop builds + manifest + checksums.
+      const okName = /^SwarajAI-desktop-v[\w.]+\.zip$/.test(name)
+        || /^SwarajAI-desktop-v[\w.]+\.zip\.sha256$/.test(name)
+        || name === 'latest.json';
+      if (!okName) return send(res, 404, { ok: false, error: 'not found' });
+      const fp = path.join(DIST, name);
+      if (!fp.startsWith(DIST + path.sep) || !fs.existsSync(fp) || !fs.statSync(fp).isFile()) {
+        return send(res, 404, { ok: false, error: 'no desktop build yet — run: npm run package:desktop' });
+      }
+      const ext = name.endsWith('.sha256') ? '.sha256' : path.extname(fp).toLowerCase();
+      res.writeHead(200, {
+        'Content-Type': MIME[ext] || 'application/octet-stream',
+        'Content-Length': fs.statSync(fp).size,
+        'Content-Disposition': `attachment; filename="${name}"`,
+        'Cache-Control': 'no-store',
+      });
+      fs.createReadStream(fp).pipe(res);
+      return;
     }
     if (req.method === 'GET' && url.pathname.startsWith('/artifact/')) {
       const name = path.basename(decodeURIComponent(url.pathname.slice('/artifact/'.length)));
@@ -333,4 +525,4 @@ if (require.main === module) {
   };
   tryListen();
 }
-module.exports = { server, rag, audit, egress, orch };
+module.exports = { server, rag, audit, egress, orch, permissions, listDesktopBuilds, DIST };

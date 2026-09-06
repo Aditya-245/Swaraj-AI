@@ -17,19 +17,29 @@ function isChitChat(prompt) {
   const p = String(prompt || '').trim();
   // Short social openers only — anything mentioning work goes full pipeline.
   if (p.length > 80) return false;
-  if (/(report|sop|weld|defect|inspect|photo|image|code|pdf|docx|analyse|analyze|review|calculate|generate|approve)/i.test(p)) return false;
+  if (/(report|sop|weld|defect|inspect|photo|image|code|pdf|docx|xlsx|analyse|analyze|review|calculate|generate|approve|find|search|folder|command|shell|excel|spreadsheet)/i.test(p)) return false;
   return CHITCHAT_RE.test(p);
 }
 
+const LOCAL_INTENT_RE = /(find|search|locate|look for).{0,30}(file|folder|on my|local|computer|pc|machine)|list (files|folder|directory)|open (file|folder)|creat.*(excel|spreadsheet|xlsx|word|docx|document|pdf)|modif.*(excel|xlsx|word|docx|file)|update .*spreadsheet|append .*(sheet|row|paragraph)|run (command|shell|program)|execute /i;
+
+function isLocalIntent(prompt, files) {
+  if ((!files || files.length === 0) && LOCAL_INTENT_RE.test(String(prompt || ''))) return true;
+  if (/[a-zA-Z]:[\\/]|(^|\s)\/(users|home|data|tmp|out)\//i.test(String(prompt || ''))) return true;
+  if (/\.(docx|xlsx)\b/i.test(String(prompt || '')) && /(modif|update|append|edit|creat|open|read|find)/i.test(String(prompt || ''))) return true;
+  return false;
+}
+
 class Orchestrator {
-  constructor({ rag, audit, egress, outDir, llm = null }) {
+  constructor({ rag, audit, egress, outDir, llm = null, permissions = null }) {
     this.rag = rag;
     this.audit = audit;
     this.egress = egress;
     this.outDir = outDir;
+    this.permissions = permissions || null;
     this.router = new ModelRouter();
     this.llm = llm || new OllamaClient({ egress });
-    this.tools = makeTools({ rag, outDir, audit });
+    this.tools = makeTools({ rag, outDir, audit, permissions: this.permissions });
   }
 
   // Streaming-aware generation: when prog is set, tokens are forwarded as
@@ -156,6 +166,8 @@ class Orchestrator {
   }
 
   async runTask({ taskId = `task-${Date.now()}`, prompt, files = [], prog = null }) {
+    // Local-PC intents first (they must not be swallowed by chit-chat).
+    if (isLocalIntent(prompt, files)) return this.runLocal({ taskId, prompt, prog });
     if (isChitChat(prompt) && (!files || files.length === 0)) return this.runChat({ taskId, prompt, prog });
     const ev = (type, data = {}) => this.audit.append({ task: taskId, event: type, ...data });
     ev('task_received', { prompt: String(prompt).slice(0, 500), files: files.length });
@@ -172,6 +184,8 @@ class Orchestrator {
     // Route-specific answering: only document jobs run the full pipeline.
     if ((!files || files.length === 0) && route.route === 'general') return this.runQA({ taskId, prompt, prog });
     if ((!files || files.length === 0) && route.route === 'coding') return this.runCode({ taskId, prompt, prog });
+    // Forward SSE prog to gated tools so permission prompts surface in-chat.
+    if (this.tools && this.tools.__setProg) { try { this.tools.__setProg(prog); } catch {} }
     const hasImage = (files || []).some((f) => /\.(png|jpe?g|bmp|tiff?|webp|gif)$/i.test(f.path || f.name || ''));
     const hasDoc = (files || []).some((f) => /\.(pdf|docx?|txt|md)$/i.test(f.path || f.name || '') || typeof f.text === 'string');
     // Image-only tasks always go to vision end-to-end (bytes → moondream → fallback stub).
@@ -281,9 +295,149 @@ class Orchestrator {
     const keys = this.egress.scanEnv();
     const egressReport = { externalLLM: 0, remoteMCP: 0, externalAPI: findings.length, internetTraffic: 0, cloudKeys: keys };
     ev('completion', { ok: true, verdict, egress: egressReport });
+    if (this.tools && this.tools.__setProg) { try { this.tools.__setProg(null); } catch {} }
 
     return { ok: true, kind: 'job', taskId, route, plan, docs: docs.length, hits, vision, calc, verdict, reply, replyModel, replySource, docx, pdf, egress: egressReport, events: EVENT_ORDER };
   }
+
+  // Local-PC pipeline: permission-gated search / office edit / machine control.
+  // Every sensitive step calls PermissionManager.guard() which emits
+  // {t:'permission', ...} over SSE — the UI turns it into an opencode-style
+  // [Allow once | Allow always | Reject] modal and POSTs the decision back.
+  async runLocal({ taskId = `local-${Date.now()}`, prompt, prog = null }) {
+    const ev = (type, data = {}) => this.audit.append({ task: taskId, event: type, ...data });
+    if (this.tools && this.tools.__setProg) { try { this.tools.__setProg(prog); } catch {} }
+    const route = { ok: true, route: 'local', model: 'llama3.2:1b' };
+    if (prog) { try { prog({ t: 'kind', kind: 'local', route: 'local', model: 'llama3.2:1b' }); } catch {} }
+    ev('task_received', { prompt: String(prompt).slice(0, 500), kind: 'local' });
+    ev('agent_selected', { agent: 'opencode-local-agent', reason: 'local-machine intent' });
+    ev('model_selected', { route: 'local', model: 'llama3.2:1b', ok: true });
+    if (prog) { try { prog({ t: 'step', phase: 'local', text: 'planning local-machine steps…' }); } catch {} }
+
+    const p = String(prompt || '');
+    const steps = [];
+    let result = null;
+    const denied = (e) => String((e && e.message) || e).slice(0, 300);
+
+    try {
+      // Heuristic planner (offline, deterministic). Order matters: a prompt can
+      // chain steps, e.g. "find X and open it" — we run each matched step.
+      const pathMatch = p.match(/([a-zA-Z]:[\\/][^\s"'<>|*?]+|\/(?:users|home|data|tmp|out)[^\s"'<>|*?]*)/i);
+      const quotedMatch = p.match(/["“]([^"”]+?\.(?:docx|xlsx|pptx|pdf|txt|md|csv))["”]/i);
+      const wantedPath = (quotedMatch && quotedMatch[1]) || (pathMatch && pathMatch[1]) || null;
+
+      if (/\b(find|search|locate|look for)\b/i.test(p)) {
+        const qm = p.match(/(?:find|search|locate|look for)\s+(?:file(?:s)?\s+(?:named|called|like)?\s*)?["“]?([^"”\n]{1,120}?)(?:["”]| in | on my| on the|$)/i);
+        let query = (qm && qm[1] ? qm[1].trim() : '').replace(/^(for|the)\s+/i, '').slice(0, 120) || p.slice(0, 80);
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `searching locally for “${query}”…` }); } catch {} }
+        ev('tool_calls', { tools: ['local_search'], query });
+        result = await this.tools.local_search({ query, includeContent: /content|inside|containing/i.test(p) });
+        steps.push(`local_search "${query}" → ${result.count} hit(s)`);
+      } else if (/\blist\b.*(files|folder|directory)|show .*folder/i.test(p)) {
+        const dir = wantedPath || require('os').homedir();
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `listing ${dir}…` }); } catch {} }
+        ev('tool_calls', { tools: ['local_list'] });
+        result = await this.tools.local_list({ dir });
+        steps.push(`local_list ${dir} → ${result.count} entries`);
+      } else if (/\bopen\b/i.test(p) && wantedPath) {
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `opening ${wantedPath}…` }); } catch {} }
+        ev('tool_calls', { tools: ['open_path'] });
+        result = await this.tools.open_path({ path: wantedPath });
+        steps.push(`open_path ${wantedPath}`);
+      } else if (/creat.*(excel|spreadsheet|xlsx)/i.test(p)) {
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: 'creating spreadsheet…' }); } catch {} }
+        ev('tool_calls', { tools: ['office_create'] });
+        result = await this.tools.office_create({ kind: 'xlsx', rows: [['Item', 'Value'], ['Created by', 'Swaraj AI (local)']], filename: `local-${Date.now()}.xlsx`, path: wantedPath || undefined });
+        steps.push(`office_create xlsx → ${result.path}`);
+      } else if (/creat.*(word|docx|document)/i.test(p)) {
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: 'creating document…' }); } catch {} }
+        ev('tool_calls', { tools: ['office_create'] });
+        result = await this.tools.office_create({ kind: 'docx', paras: [p.slice(0, 200), 'Drafted locally by Swaraj AI — review before sharing.'], filename: `local-${Date.now()}.docx`, path: wantedPath || undefined });
+        steps.push(`office_create docx → ${result.path}`);
+      } else if (/modif|update|append|edit/i.test(p) && (/\.xlsx/i.test(p) || /excel|spreadsheet|sheet/i.test(p))) {
+        if (!wantedPath) throw new Error('Tell me which .xlsx file to modify (paste its full path in quotes).');
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `modifying ${wantedPath}…` }); } catch {} }
+        ev('tool_calls', { tools: ['office_modify'] });
+        result = await this.tools.office_modify({ path: wantedPath, appendRows: [['Updated by Swaraj AI', new Date().toISOString().slice(0, 10)]] });
+        steps.push(`office_modify ${wantedPath} → ${result.rows} rows`);
+      } else if (/modif|update|append|edit/i.test(p) && (/\.docx/i.test(p) || /word|document/i.test(p))) {
+        if (!wantedPath) throw new Error('Tell me which .docx file to modify (paste its full path in quotes).');
+        const add = (p.match(/append\s+["“]([^"”]+)["”]/i) || [])[1] || `Update noted ${new Date().toISOString().slice(0, 10)} — added by Swaraj AI.`;
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `modifying ${wantedPath}…` }); } catch {} }
+        ev('tool_calls', { tools: ['office_modify'] });
+        result = await this.tools.office_modify({ path: wantedPath, append: [add] });
+        steps.push(`office_modify ${wantedPath} (+${result.appended} paragraph)`);
+      } else if (/\brun\b|\bexecute\b|\bshell\b|\bcommand\b/i.test(p)) {
+        const cm = p.match(/run\s+["“`]?([a-z0-9_.\-/\\]+)(?:\s+([^"”\n]*))?["”]?/i);
+        const cmd = cm ? cm[1] : null;
+        const cmdArgs = cm && cm[2] ? cm[2].trim().split(/\s+/).slice(0, 12) : [];
+        if (!cmd) throw new Error('Tell me which command to run, e.g. `run node --version`.');
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `running ${cmd}…` }); } catch {} }
+        ev('tool_calls', { tools: ['shell_exec'] });
+        result = await this.tools.shell_exec({ cmd, args: cmdArgs });
+        steps.push(`shell_exec ${cmd} → ${result.ok ? 'ok' : 'failed'}`);
+      } else if (wantedPath && /\.(docx|xlsx|pptx|pdf|txt|md|csv)$/i.test(wantedPath)) {
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `reading ${wantedPath}…` }); } catch {} }
+        ev('tool_calls', { tools: [/\.(docx|xlsx|pptx)$/i.test(wantedPath) ? 'office_read' : 'local_read'] });
+        result = /\.(docx|xlsx|pptx)$/i.test(wantedPath)
+          ? await this.tools.office_read({ path: wantedPath })
+          : await this.tools.local_read({ path: wantedPath });
+        steps.push(`read ${wantedPath} (${result.bytes} bytes)`);
+      } else {
+        // Default: treat the prompt as a file-search query.
+        if (prog) { try { prog({ t: 'step', phase: 'local', text: `searching locally for “${p.slice(0, 60)}”…` }); } catch {} }
+        ev('tool_calls', { tools: ['local_search'] });
+        result = await this.tools.local_search({ query: p.slice(0, 120) });
+        steps.push(`local_search → ${result.count} hit(s)`);
+      }
+    } catch (e) {
+      const code = e && e.code;
+      if (code === 'PERMISSION_DENIED' || code === 'PERMISSION_TIMEOUT') {
+        ev('errors_retries', { error: `permission ${code === 'PERMISSION_TIMEOUT' ? 'timed out' : 'rejected'}: ${denied(e)}` });
+        ev('completion', { ok: false, kind: 'local', reason: 'permission' });
+        const reply = code === 'PERMISSION_TIMEOUT'
+          ? 'That local action timed out waiting for your approval, so I left everything untouched. Ask again when you are ready to allow it.'
+          : 'Understood — I did not touch your machine. The action was rejected, nothing was read, written or run.';
+        this._emitTokens(reply, prog);
+        return { ok: false, kind: 'local', taskId, route, error: denied(e), permission: code, reply, steps,
+          egress: { externalLLM: 0, remoteMCP: 0, externalAPI: 0, internetTraffic: 0 } };
+      }
+      ev('errors_retries', { error: denied(e) });
+      ev('completion', { ok: false, kind: 'local' });
+      const reply = `I could not complete that local step: ${denied(e)}`;
+      this._emitTokens(reply, prog);
+      return { ok: false, kind: 'local', taskId, route, error: denied(e), reply, steps,
+        egress: { externalLLM: 0, remoteMCP: 0, externalAPI: 0, internetTraffic: 0 } };
+    } finally {
+      if (this.tools && this.tools.__setProg) { try { this.tools.__setProg(null); } catch {} }
+    }
+
+    // Human-readable summary (LLM when reachable, template otherwise).
+    const summaryCtx = JSON.stringify(result).slice(0, 1200);
+    let reply = null, replySource = 'template';
+    const llmRes = await this._gen('llama3.2:1b',
+      `You are Swaraj AI. The user asked: "${p.slice(0, 300)}"\n` +
+      `Local steps taken: ${steps.join('; ')}\nTool result (JSON, trusted): ${summaryCtx}\n` +
+      `Reply in at most 5 short sentences: what was found/changed, full paths, counts, and what to do next. Plain prose, no JSON.`,
+      { numPredict: 220, timeoutMs: 60000 }, prog);
+    if (llmRes.ok) { reply = llmRes.text; replySource = 'ollama'; }
+    if (!reply) {
+      if (result && typeof result.count === 'number' && Array.isArray(result.results)) {
+        const top = result.results.slice(0, 5).map((r) => r.path).join('; ') || 'no matches';
+        reply = `Local search finished: ${result.count} match(es) across ${result.scanned} file(s) scanned. Top hits: ${top}. ` +
+          `Each location above asked for your permission before I touched it — allow once for a single run, or allow always to skip future prompts for that folder.`;
+      } else if (result && result.path) {
+        reply = `Done: ${steps.join('; ')}. File: ${result.path}${result.bytes ? ` (${result.bytes} bytes)` : ''}. ` +
+          `This step ran only after your explicit approval, and the decision is in the audit trail.`;
+      } else {
+        reply = `Done: ${steps.join('; ') || 'local step'}. Nothing left your machine — the audit trail records the permission you granted.`;
+      }
+      this._emitTokens(reply, prog);
+    }
+    ev('completion', { ok: true, kind: 'local', steps: steps.length });
+    return { ok: true, kind: 'local', taskId, route, steps, local: result, reply, replyModel: 'llama3.2:1b', replySource,
+      egress: { externalLLM: 0, remoteMCP: 0, externalAPI: 0, internetTraffic: 0 } };
+  }
 }
 
-module.exports = { Orchestrator, isChitChat };
+module.exports = { Orchestrator, isChitChat, isLocalIntent };

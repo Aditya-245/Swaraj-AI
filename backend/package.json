@@ -1,0 +1,20 @@
+{
+  "name": "sovereign-backend",
+  "version": "0.1.0",
+  "description": "Swaraj AI backend — API-only (no static). Deploy on Render/Railway/Fly. Code lives in ../src (single source of truth).",
+  "type": "commonjs",
+  "main": "../src/server.js",
+  "scripts": {
+    "start": "node ../src/server.js",
+    "start:api-only": "node ../src/server.js",
+    "health": "node -e \"fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/api/health').then(r=>r.text()).then(t=>console.log(t))\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "pg": "^8.23.0"
+  }
+}

@@ -7,11 +7,15 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "start": "node src/server.js",
+    "start:backend": "node scripts/run-backend.js",
+    "start:frontend": "node scripts/run-frontend.js",
     "workbench": "node scripts/workbench.js",
     "demo": "node scripts/golden-path.js",
     "security": "node scripts/egress-check.js",
     "package:desktop": "node scripts/package-desktop.js",
     "desktop:list": "node scripts/package-desktop.js --list",
+    "models": "node scripts/setup-models.js",
+    "models:check": "node scripts/setup-models.js --check",
     "desktop": "node scripts/workbench.js"
   },
   "engines": {

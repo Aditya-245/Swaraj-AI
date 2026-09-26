@@ -10,6 +10,9 @@ const { RagIndex } = require('./rag');
 const { AuditTrail } = require('./audit');
 const { EgressGuard } = require('./egress');
 const { Orchestrator } = require('./orchestrator');
+const { OllamaClient } = require('./ollama');
+const { MemoryStore, extractFacts, KEY_RE } = require('./memory');
+const { ContextStore, contextBlock } = require('./context');
 // Optional deps (pg / bcryptjs) enable login + task history. The core
 // agent is stdlib-only: when they are not installed (e.g. a fresh
 // desktop-ZIP extract with no `npm install`), auth routes report 503
@@ -57,9 +60,70 @@ fs.mkdirSync(DATA, { recursive: true });
 fs.mkdirSync(OUT, { recursive: true });
 fs.mkdirSync(UPLOADS, { recursive: true });
 
+// ---- Split-deploy mode (separate frontend/backend) ----
+// Monolith default: SERVE_STATIC=1, HOST=127.0.0.1 (local-only).
+// Backend-only (Render/Railway): SERVE_STATIC=0, HOST=0.0.0.0, FRONTEND_URL=https://<vercel-app>.vercel.app
+// Frontend (Vercel/static) talks to backend via window.__BACKEND_URL (see public/config.js).
+const SERVE_STATIC = String(process.env.SERVE_STATIC || '1') !== '0';
+const HOST = process.env.HOST || '127.0.0.1';
+const FRONTEND_URL = (process.env.FRONTEND_URL || '').replace(/\/$/, '');
+function corsHeaders() {
+  // * for local dev; exact origin in prod when FRONTEND_URL is set.
+  const allow = FRONTEND_URL || '*';
+  return {
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
 const rag = new RagIndex();
 const audit = new AuditTrail(path.join(DATA, 'audit.jsonl'));
 const egress = new EgressGuard();
+// Swaraj Memory: durable user/org facts (Postgres when up, else data/memory.json).
+// Owner is `user:<id>` when signed in, else `local` (single-user desktop).
+const memory = new MemoryStore({ filePath: path.join(DATA, 'memory.json'), getPool: async () => await dbReady });
+// Multi-session conversation context: recent turns per owner, fed back to
+// the model so follow-ups resolve across sessions. Same owner rule as memory.
+const ctxStore = new ContextStore({ filePath: path.join(DATA, 'context.json'), getPool: async () => await dbReady });
+// Turn persistence. The user prompt is recorded BEFORE the run, so a failed
+// or crashed model call still leaves the message in context for next time;
+// the reply is only stored when the run actually produced one.
+async function appendTurn(owner, role, text) {
+  try { await ctxStore.append(owner, role, text); } catch {}
+}
+async function recordPrompt(owner, prompt) { return appendTurn(owner, 'user', prompt); }
+async function recordReply(owner, r) {
+  if (r && r.ok && r.reply) return appendTurn(owner, 'assistant', r.reply);
+}
+async function ownerOf(req) {
+  try {
+    const pool = await dbReady;
+    if (pool) {
+      const user = await auth.userFromToken(auth.readCookie(req)).catch(() => null);
+      if (user) return `user:${user.id}`;
+    }
+  } catch {}
+  return 'local';
+}
+// Learn durable facts from the prompt ("my company name is X"), then load
+// everything remembered for this owner. Never throws — tasks must survive.
+async function applyMemory(req, prompt, owner = null) {
+  try {
+    owner = owner || await ownerOf(req);
+    const { remember, forget } = extractFacts(prompt);
+    for (const k of forget) {
+      await memory.forget(owner, k);
+      try { audit.append({ event: 'memory_forgotten', owner, key: k }); } catch {}
+    }
+    for (const [k, v] of Object.entries(remember)) {
+      await memory.remember(owner, k, v);
+      try { audit.append({ event: 'memory_saved', owner, key: k }); } catch {}
+    }
+    return await memory.getAll(owner);
+  } catch { return {}; }
+}
 const { PermissionManager } = require('./permissions');
 const permissions = new PermissionManager({ filePath: path.join(DATA, 'permissions.json'), audit });
 const orch = new Orchestrator({ rag, audit, egress, outDir: OUT, permissions });
@@ -127,12 +191,51 @@ function listDesktopBuilds() {
   };
 }
 
+// ---- Local model fleet: desktop/models.json pins the 3 Ollama models.
+// GET /api/models reports which are present on THIS machine (local /api/tags
+// call only, 5s cap). Without them the agent runs on built-in templates.
+const FALLBACK_MODELS = [
+  { name: 'llama3.2:1b', role: 'general', job: 'General reasoning, chat, Q&A', size: '1.3 GB' },
+  { name: 'qwen2.5-coder:1.5b', role: 'coding', job: 'Code and calculations', size: '986 MB' },
+  { name: 'moondream:latest', role: 'vision', job: 'Inspection photos', size: '1.7 GB' },
+];
+function loadModelFleet() {
+  for (const p of [path.join(ROOT, 'models.json'), path.join(ROOT, 'desktop', 'models.json')]) {
+    try {
+      if (fs.existsSync(p)) {
+        const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (Array.isArray(j.models) && j.models.length) {
+          return { models: j.models, requirements: j.requirements || {} };
+        }
+      }
+    } catch {}
+  }
+  return { models: FALLBACK_MODELS, requirements: {} };
+}
+async function modelStatus() {
+  const fleet = loadModelFleet();
+  const client = new OllamaClient({ egress });
+  const t = await client.tags(); // local-only, aborts after 5s when Ollama is down
+  const have = t.ok ? (t.models || []) : [];
+  const base = (s) => String(s).split(':')[0].toLowerCase();
+  const required = fleet.models.map((m) => {
+    const hit = have.find((h) => h === m.name || base(h) === base(m.name)) || null;
+    return { name: m.name, role: m.role || '', job: m.job || '', size: m.size || '', installed: !!hit, foundAs: hit };
+  });
+  return {
+    ok: true, ollamaUp: t.ok, models: have,
+    required, ready: required.length > 0 && required.every((m) => m.installed),
+    requirements: fleet.requirements,
+    hint: t.ok ? undefined : 'Ollama is not reachable — install it (https://ollama.com/download) then run: npm run models',
+  };
+}
+
 function send(res, code, body, type = 'application/json') {
   let b;
   if (Buffer.isBuffer(body)) b = body;
   else if (typeof body === 'string') b = Buffer.from(body, 'utf8');
   else b = Buffer.from(JSON.stringify(body), 'utf8');
-  res.writeHead(code, { 'Content-Type': type, 'Content-Length': b.length });
+  res.writeHead(code, { 'Content-Type': type, 'Content-Length': b.length, ...corsHeaders() });
   res.end(b);
 }
 
@@ -184,7 +287,13 @@ function resolveUploadRef(ref) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   try {
-    if (req.method === 'GET' && url.pathname === '/api/health') return send(res, 200, { ok: true, local: true, kb: rag.count() });
+    // CORS preflight for split frontend (Vercel) -> backend (Render).
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, { ...corsHeaders(), 'Content-Length': '0' });
+      res.end();
+      return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/health') return send(res, 200, { ok: true, local: !FRONTEND_URL, kb: rag.count(), static: SERVE_STATIC });
     if (req.method === 'GET' && url.pathname === '/api/agents') return send(res, 200, { agents: [{ id: 'opencode-local-agent', models: ['llama3.2:1b', 'qwen2.5-coder:1.5b', 'moondream'] }] });
     if (req.method === 'GET' && url.pathname === '/api/kb') {
       const q = url.searchParams.get('q') || '';
@@ -311,6 +420,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && (url.pathname === '/api/download' || url.pathname === '/api/download/latest.json')) {
       return send(res, 200, listDesktopBuilds());
     }
+    if (req.method === 'GET' && url.pathname === '/api/models') {
+      return send(res, 200, await modelStatus());
+    }
     if (req.method === 'GET' && url.pathname.startsWith('/download/')) {
       const name = path.basename(decodeURIComponent(url.pathname.slice('/download/'.length)));
       // Strict allowlist: only our desktop builds + manifest + checksums.
@@ -328,6 +440,7 @@ const server = http.createServer(async (req, res) => {
         'Content-Length': fs.statSync(fp).size,
         'Content-Disposition': `attachment; filename="${name}"`,
         'Cache-Control': 'no-store',
+        ...corsHeaders(),
       });
       fs.createReadStream(fp).pipe(res);
       return;
@@ -337,7 +450,7 @@ const server = http.createServer(async (req, res) => {
       const fp = path.join(OUT, name);
       if (!name || !fs.existsSync(fp) || !fs.statSync(fp).isFile()) return send(res, 404, { ok: false, error: 'not found' });
       res.writeHead(200, { 'Content-Type': MIME[path.extname(fp).toLowerCase()] || 'application/octet-stream',
-        'Content-Length': fs.statSync(fp).size, 'Content-Disposition': `attachment; filename="${name}"` });
+        'Content-Length': fs.statSync(fp).size, 'Content-Disposition': `attachment; filename="${name}"`, ...corsHeaders() });
       fs.createReadStream(fp).pipe(res);
       return;
     }
@@ -430,6 +543,45 @@ const server = http.createServer(async (req, res) => {
         'SELECT kind, prompt, verdict, route, model, created_at FROM user_tasks WHERE user_id=$1 ORDER BY id DESC LIMIT 50', [user.id]);
       return send(res, 200, { ok: true, tasks: rows });
     }
+    if (req.method === 'GET' && url.pathname === '/api/memory') {
+      const owner = await ownerOf(req);
+      return send(res, 200, { ok: true, owner, facts: await memory.getAll(owner) });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/memory') {
+      const b = await readBody(req);
+      const key = String((b && b.key) || '').toLowerCase().trim();
+      const value = String((b && b.value) || '').trim().slice(0, 200);
+      if (!KEY_RE.test(key) || !value) return send(res, 400, { ok: false, error: 'need {key, value} (a-z, 0-9, _, -)' });
+      const owner = await ownerOf(req);
+      const saved = await memory.remember(owner, key, value);
+      try { audit.append({ event: 'memory_saved', owner, key }); } catch {}
+      return send(res, 200, { ok: true, ...saved });
+    }
+    if (req.method === 'DELETE' && url.pathname === '/api/memory') {
+      const owner = await ownerOf(req);
+      const facts = await memory.getAll(owner);
+      for (const k of Object.keys(facts)) await memory.forget(owner, k);
+      try { audit.append({ event: 'memory_cleared', owner, count: Object.keys(facts).length }); } catch {}
+      return send(res, 200, { ok: true, owner, cleared: Object.keys(facts).length });
+    }
+    if (req.method === 'DELETE' && url.pathname.startsWith('/api/memory/')) {
+      const key = path.basename(decodeURIComponent(url.pathname.slice('/api/memory/'.length))).toLowerCase();
+      if (!KEY_RE.test(key)) return send(res, 400, { ok: false, error: 'unknown key' });
+      const owner = await ownerOf(req);
+      await memory.forget(owner, key);
+      try { audit.append({ event: 'memory_forgotten', owner, key }); } catch {}
+      return send(res, 200, { ok: true, owner, key });
+    }
+    if (req.method === 'GET' && url.pathname === '/api/context') {
+      const owner = await ownerOf(req);
+      const turns = await ctxStore.recent(owner);
+      return send(res, 200, { ok: true, owner, count: turns.length, turns });
+    }
+    if (req.method === 'DELETE' && url.pathname === '/api/context') {
+      const owner = await ownerOf(req);
+      await ctxStore.clear(owner);
+      return send(res, 200, { ok: true, owner });
+    }
     if (req.method === 'POST' && url.pathname === '/api/documents') {
       const b = await readBody(req);
       if (!b.id || !b.text) return send(res, 400, { ok: false, error: 'need {id,text}' });
@@ -450,16 +602,22 @@ const server = http.createServer(async (req, res) => {
       let prompt = typeof b.prompt === 'string' ? b.prompt : '';
       if (!prompt.trim() && files.length === 0) return send(res, 400, { ok: false, error: 'need {prompt} and/or uploaded image files' });
       if (!prompt.trim()) prompt = 'Describe this image in detail and flag any weld defects, corrosion, cracks, or safety issues.';
+      const ownerStream = await ownerOf(req);
+      const memStream = await applyMemory(req, prompt, ownerStream);
+      const ctxStream = contextBlock(await ctxStore.recent(ownerStream));
+      const forceLocal = b.local === true; // Local PC screen: agent decides the steps
       // Server-sent events: {t:'kind'|'step'|'token'} … then {t:'done', result} or {t:'error'}.
       res.writeHead(200, {
         'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',
         Connection: 'keep-alive', 'X-Accel-Buffering': 'no',
       });
       if (res.flushHeaders) { try { res.flushHeaders(); } catch {} }
+      await recordPrompt(ownerStream, prompt);
       const sendEv = (obj) => { try { res.write(`data: ${JSON.stringify(obj)}\n\n`); } catch {} };
       const hb = setInterval(() => { try { res.write(': ping\n\n'); } catch {} }, 15000);
       try {
-        const r = await orch.runTask({ prompt, files, prog: sendEv });
+        const r = await orch.runTask({ prompt, files, prog: sendEv, memory: memStream, context: ctxStream, local: forceLocal });
+        await recordReply(ownerStream, r);
         sendEv({ t: 'done', result: r });
       } catch (e) {
         sendEv({ t: 'error', error: String((e && e.message) || e).slice(0, 300) });
@@ -482,7 +640,12 @@ const server = http.createServer(async (req, res) => {
       let prompt = typeof b.prompt === 'string' ? b.prompt : '';
       if (!prompt.trim() && files.length === 0) return send(res, 400, { ok: false, error: 'need {prompt} and/or uploaded image files' });
       if (!prompt.trim()) prompt = 'Describe this image in detail and flag any weld defects, corrosion, cracks, or safety issues.';
-      const r = await orch.runTask({ prompt, files });
+      const ownerOnce = await ownerOf(req);
+      const memOnce = await applyMemory(req, prompt, ownerOnce);
+      const ctxOnce = contextBlock(await ctxStore.recent(ownerOnce));
+      await recordPrompt(ownerOnce, prompt);
+      const r = await orch.runTask({ prompt, files, memory: memOnce, context: ctxOnce, local: b.local === true });
+      await recordReply(ownerOnce, r);
       dbReady.then(async (pool) => {
         if (!pool) return;
         try {
@@ -494,7 +657,8 @@ const server = http.createServer(async (req, res) => {
       });
       return send(res, 200, r);
     }
-    // static
+    // static (disabled in backend-only mode: SERVE_STATIC=0)
+    if (!SERVE_STATIC) return send(res, 404, { ok: false, error: 'static disabled (backend-only). Serve frontend separately.' });
     let fp = path.join(PUB, url.pathname === '/' ? 'index.html' : url.pathname.slice(1));
     if (!fp.startsWith(PUB)) return send(res, 403, 'denied', 'text/plain');
     if (fs.existsSync(fp) && fs.statSync(fp).isFile()) {
@@ -508,7 +672,6 @@ const server = http.createServer(async (req, res) => {
 
 if (require.main === module) {
   const wanted = parseInt(process.env.PORT || '8080', 10);
-  const hosts = ['127.0.0.1'];
   let port = wanted;
   const tryListen = () => {
     server.once('error', (e) => {
@@ -516,13 +679,13 @@ if (require.main === module) {
         port += 1;
         tryListen();
       } else {
-        console.error(`FAILED to bind 127.0.0.1:${port}: ${e.message}`);
+        console.error(`FAILED to bind ${HOST}:${port}: ${e.message}`);
         console.error('Fix: stop the other process or set PORT env, e.g. $env:PORT=8081; npm start');
         process.exit(1);
       }
     });
-    server.listen(port, '127.0.0.1', () => console.log(`Swaraj AI workbench (local-only) on http://127.0.0.1:${port}`));
+    server.listen(port, HOST, () => console.log(`Swaraj AI workbench on http://${HOST}:${port} (static=${SERVE_STATIC ? 'on' : 'off'})`));
   };
   tryListen();
 }
-module.exports = { server, rag, audit, egress, orch, permissions, listDesktopBuilds, DIST };
+module.exports = { server, rag, audit, egress, orch, permissions, listDesktopBuilds, modelStatus, loadModelFleet, memory, ownerOf, DIST, SERVE_STATIC, HOST, FRONTEND_URL };

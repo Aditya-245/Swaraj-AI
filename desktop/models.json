@@ -1,0 +1,39 @@
+{
+  "runtime": "ollama",
+  "runtimeUrl": "https://ollama.com/download",
+  "runtimeApi": "http://127.0.0.1:11434",
+  "note": "Single source of truth for Swaraj AI's local model fleet. Read by scripts/setup-models.js, src/server.js (/api/models) and scripts/package-desktop.js (dist/latest.json). Without these models the workbench still runs on built-in templates; with them every route answers locally.",
+  "models": [
+    {
+      "name": "llama3.2:1b",
+      "role": "general",
+      "job": "General reasoning, chat, Q&A, bilingual drafting",
+      "params": "1B",
+      "size": "1.3 GB"
+    },
+    {
+      "name": "qwen2.5-coder:1.5b",
+      "role": "coding",
+      "job": "Code, defect-rate math, sandbox-safe snippets",
+      "params": "1.5B",
+      "size": "986 MB"
+    },
+    {
+      "name": "moondream:latest",
+      "role": "vision",
+      "job": "Weld beads, gauges, nameplates, inspection photos",
+      "params": "~1.8B VLM",
+      "size": "1.7 GB"
+    }
+  ],
+  "requirements": {
+    "os": ["Windows 10/11 64-bit", "Linux x86_64", "macOS 12+ (Intel / Apple Silicon)"],
+    "node": ">=18",
+    "ollama": ">=0.3",
+    "ram": "8 GB minimum, 16 GB recommended",
+    "cpu": "4+ cores; GPU optional — Ollama uses it automatically when present",
+    "disk": "~4 GB for models + ~300 MB for the app",
+    "network": "Internet once for `ollama pull` (or USB sideload for air-gapped sites); fully offline afterwards"
+  },
+  "airgap": "Copy .gguf weights via USB, then per model: `ollama create <tag> --from <file.gguf>` (see README-DESKTOP.txt)."
+}

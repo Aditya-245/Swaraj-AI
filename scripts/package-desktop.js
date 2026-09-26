@@ -146,11 +146,21 @@ function collectFiles() {
   };
 
   // Top-level launchers (double-click first impression)
+  // SwarajAI.vbs is the primary Windows launcher: hidden, no console.
+  addFile('desktop/SwarajAI.vbs', 'SwarajAI.vbs');
+  addFile('desktop/Stop-SwarajAI.vbs', 'Stop-SwarajAI.vbs');
+  addFile('desktop/Setup-SwarajAI.bat', 'Setup-SwarajAI.bat');
+  addFile('desktop/Setup-Windows.ps1', 'Setup-Windows.ps1');
   addFile('desktop/SwarajAI.bat', 'SwarajAI.bat');
   addFile('desktop/Start-SwarajAI.ps1', 'Start-SwarajAI.ps1');
   addFile('desktop/SwarajAI.sh', 'SwarajAI.sh', { mode: 0o755 });
   addFile('desktop/README-DESKTOP.txt', 'README-DESKTOP.txt');
   addFile('desktop/electron-main.js', 'desktop/electron-main.js');
+  // Local model fleet: pinned manifest + one-click fetch scripts.
+  // (4 GB of weights download once via `ollama pull`; afterwards offline.)
+  addFile('desktop/models.json', 'models.json');
+  addFile('desktop/Pull-Models.ps1', 'Pull-Models.ps1');
+  addFile('desktop/pull-models.sh', 'pull-models.sh', { mode: 0o755 });
 
   // App core
   addFile('package.json', 'package.json');
@@ -158,7 +168,7 @@ function collectFiles() {
   addFile('docker-compose.yml', 'docker-compose.yml', { optional: true });
   addDir('src', 'src/', (f) => f.endsWith('.js'));
   addDir('public', 'public/', (f) => /\.(html|css|js|png|jpg|jpeg|svg|ico|json)$/i.test(f));
-  addDir('scripts', 'scripts/', (f) => ['workbench.js', 'golden-path.js', 'egress-check.js'].includes(f));
+  addDir('scripts', 'scripts/', (f) => ['workbench.js', 'golden-path.js', 'egress-check.js', 'setup-models.js'].includes(f));
   // Seed data only: SOPs + demo report. Never ship pg binaries, uploads, or audit logs.
   addDir('data', 'data/', (f) => f.endsWith('.txt'));
 
@@ -224,11 +234,22 @@ function main() {
   const { bytes, count } = writeZip(entries, zipPath);
   const sha = sha256File(zipPath);
   fs.writeFileSync(zipPath + '.sha256', `${sha}  ${zipName}\n`);
+  let modelsInfo = { models: [], requirements: {} };
+  try {
+    const mj = JSON.parse(fs.readFileSync(path.join(ROOT, 'desktop', 'models.json'), 'utf8'));
+    modelsInfo = {
+      runtime: mj.runtime || 'ollama',
+      models: (mj.models || []).map((m) => ({ name: m.name, role: m.role, job: m.job, size: m.size })),
+      requirements: mj.requirements || {},
+    };
+  } catch {}
   const manifest = {
     name: 'Swaraj AI - Desktop',
     version,
     builtAt: new Date().toISOString(),
     requires: { node: '>=18', disk: '~300MB free', network: 'none (offline after install)' },
+    models: modelsInfo.models,
+    modelRequirements: modelsInfo.requirements,
     files: [
       {
         name: zipName,

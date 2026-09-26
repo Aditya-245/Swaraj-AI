@@ -1,7 +1,7 @@
 # Swaraj-AI
 SWARAJ is a sovereign, on-premise AI workbench built for secure organizations. It combines local AI models, agentic workflows, private RAG, multimodal understanding, tools, sandboxed code execution, and auditability—all designed to work without sending sensitive data outside the infrastructure.
 
-## Sovereign Industrial AI Workbench (SIH26117)
+## Sovereign Industrial AI Workbench
 
 Private AI employee running inside company infrastructure. On-prem, air-gapped,
 local/open-weight models, RAG, tools, sandbox, deliverables, audit, zero-egress proof.
@@ -40,6 +40,13 @@ npm run desktop:list      # preview what goes into the ZIP
   Needs only Node 18+, no admin, no internet. Verify with
   `certutil -hashfile <zip> SHA256` (Win) / `sha256sum` (Linux) / `shasum -a 256` (Mac).
 - The ZIP ships seed SOPs only — never `data/pg`, uploads, or audit logs.
+- Local AI models (all 3, pinned in `desktop/models.json`): `llama3.2:1b`
+  (1.3 GB, general), `qwen2.5-coder:1.5b` (986 MB, code), `moondream:latest`
+  (1.7 GB, vision). One-time fetch: install Ollama, then
+  `npm run models` (or double-click `Pull-Models.ps1` / `./pull-models.sh`);
+  check with `npm run models:check` or `GET /api/models` (live n/3 status on
+  the website Download section). Needs ~4 GB disk, 8 GB RAM, internet once —
+  then fully offline. Without them the agent still runs on built-in templates.
 - Optional native shell: `desktop/electron-main.js`
   (`npm i -D electron electron-builder`, then `npx electron desktop/electron-main.js`).
 
@@ -49,6 +56,27 @@ npm run desktop:list      # preview what goes into the ZIP
 -> parse/OCR -> `local-llava` vision -> SOP RAG (`sop-welding`)
 -> `local-mistral/codellama` routing -> sandboxed calc
 -> `out/IR-2026-042-approval.docx` + `.pdf` -> hash-chained audit -> egress `0/0/0/0`.
+
+## Memory (remembers you across sessions + documents)
+
+Say it once — `"my company name is Kalash Seeds"`, `"remember my GSTIN is ..."`,
+`"we are located in Jalna"` — and every later session greets, reasons, and
+files approval notes (DOCX/PDF carry an `Organization:` line) with it.
+`GET /api/memory` lists everything remembered; click ✕ in the workbench
+(or `DELETE /api/memory/<key>`, or say `"forget my company name"`) to erase.
+Stored in PostgreSQL when up, else `data/memory.json` — per user when signed
+in, else per machine. Extraction is deterministic regex (audited, no extra
+model call). See `src/memory.js` (`extractFacts`, `MemoryStore`).
+
+## Context (multi-session conversation memory)
+
+Beyond facts, the last ~6 turns (3 exchanges) of your conversation are kept per
+user and prepended to every model prompt, so follow-ups resolve across sessions:
+"the second one?", "make that in Hindi", "summarise what we just decided" — even
+in a fresh chat. `GET /api/context` shows the stored thread, `DELETE /api/context`
+(forget button in the workbench) clears it. Your prompt is saved *before* the
+model runs, so a failed run still remembers what you asked. Capped at 20 turns
+and 500 chars per turn to protect small local models' context windows.
 
 ## Security
 

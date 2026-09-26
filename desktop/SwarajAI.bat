@@ -8,6 +8,8 @@ REM  What it does:
 REM    1. Checks Node.js 18+ is installed
 REM    2. Starts the local workbench (127.0.0.1 only, offline)
 REM    3. Opens it in your default browser (app window if Chrome/Edge)
+REM  NOTE: for a window-less start, double-click SwarajAI.vbs instead.
+REM  This .bat is the fallback that keeps the console visible.
 REM ============================================================
 setlocal EnableDelayedExpansion
 cd /d "%~dp0"

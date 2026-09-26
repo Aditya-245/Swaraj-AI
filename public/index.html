@@ -277,7 +277,7 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
 <header class="hero" id="top">
   <div class="hero-in">
     <div>
-      <span class="pill"><span class="tri"><span>स्व</span><span>रा</span><span>ज</span></span> SIH26117 · On-prem · Air-gapped · <b>&nbsp;Zero-egress by proof</b></span>
+      <span class="pill"><span class="tri"><span>स्व</span><span>रा</span><span>ज</span></span> Self-hosted · On-prem · Air-gapped · <b>&nbsp;Zero-egress by proof</b></span>
       <h1 class="display">India's own industrial <span class="sw">intelligence.</span>
         <span class="devanagari">आपका डेटा, आपकी मिट्टी, आपकी मशीन — बाहर कुछ नहीं जाता।</span>
       </h1>
@@ -460,7 +460,7 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
       <h3>Swaraj AI Desktop<br/>स्वराज, आपकी मशीन पर</h3>
       <p id="dlMeta">Contacting this server for the latest build…</p>
       <div class="os-row" id="osRow">
-        <button class="os-btn" data-os="windows"><b>🪟 Windows</b><small>SwarajAI.bat · double-click</small></button>
+        <button class="os-btn" data-os="windows"><b>🪟 Windows</b><small>SwarajAI · double-click, no console</small></button>
         <button class="os-btn" data-os="linux"><b>🐧 Linux</b><small>./SwarajAI.sh</small></button>
         <button class="os-btn" data-os="macos"><b>🍎 macOS</b><small>./SwarajAI.sh</small></button>
       </div>
@@ -470,12 +470,14 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
       </div>
       <div class="sha-box" id="dlSha">sha256: …</div>
       <div style="font-family:var(--mono);font-size:11.5px;color:#D9DCF5;margin-top:10px" id="dlSize">size: … · requires Node 18+ · ~300MB free</div>
+      <div class="sha-box" id="dlModels" style="margin-top:10px">🤖 local models: checking…</div>
+      <div style="font-family:var(--mono);font-size:11.5px;color:#D9DCF5;margin-top:8px">needs: Ollama · ~4GB disk for models · 8GB RAM · internet once for pull</div>
     </div>
     <div class="dl-card reveal">
       <div style="font-size:11px;letter-spacing:2px;font-weight:800;color:var(--muted)">RUN IT IN 3 STEPS · OFFLINE</div>
       <ol class="steps-mini">
-        <li><span>📦</span><span><b>1 · Download &amp; extract.</b> <span id="dlStep1">Grab the ZIP above</span> anywhere — Desktop, USB stick, air-gapped share.</span></li>
-        <li><span>▶</span><span><b>2 · Double-click to launch.</b> Windows: <span style="font-family:var(--mono)">SwarajAI.bat</span> · Linux/Mac: <span style="font-family:var(--mono)">chmod +x SwarajAI.sh &amp;&amp; ./SwarajAI.sh</span></span></li>
+        <li><span>📦</span><span><b>1 · Download &amp; extract.</b> <span id="dlStep1">Grab the ZIP above</span> anywhere. Windows first-timers: right-click the ZIP &gt; Properties &gt; Unblock, then extract — this stops SmartScreen / Smart App Control flagging the launchers.</span></li>
+        <li><span>▶</span><span><b>2 · Double-click to launch.</b> Windows: <span style="font-family:var(--mono)">Setup-SwarajAI.bat</span> once, then <span style="font-family:var(--mono)">SwarajAI</span> every day (runs hidden — quit with <span style="font-family:var(--mono)">Stop-SwarajAI</span>) · Linux/Mac: <span style="font-family:var(--mono)">chmod +x SwarajAI.sh &amp;&amp; ./SwarajAI.sh</span></span></li>
         <li><span>🛡</span><span><b>3 · Verify zero-egress.</b> Open <span style="font-family:var(--mono)">/api/security</span> — counters stay <b>0/0/0/0</b>, even with the network cable pulled.</span></li>
       </ol>
       <div class="jaali"></div>
@@ -486,6 +488,7 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
       <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" id="dlVerifyBtn">⧉ Copy verify command</button>
         <a class="btn btn-ghost btn-sm" href="/api/download" target="_blank">{} API manifest</a>
+        <a class="btn btn-ghost btn-sm" href="/api/models" target="_blank">{} Models status</a>
       </div>
       <div class="sha-box" id="dlVerifyCmd">…</div>
     </div>
@@ -495,7 +498,7 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
 <!-- ============ CTA ============ -->
 <div class="cta"><div class="cta-in reveal">
   <div style="position:relative;z-index:1">
-    <div style="font-size:11.5px;letter-spacing:2.4px;font-weight:800;color:#FFD9B8">🇮🇳 SWARAJ AI · SIH26117 · AI FOR ALL, FROM INDIA</div>
+    <div style="font-size:11.5px;letter-spacing:2.4px;font-weight:800;color:#FFD9B8">🇮🇳 SWARAJ AI · AI FOR ALL, FROM INDIA</div>
     <h2>Bring the workbench<br/>inside your walls.</h2>
     <p>One command. No cloud. Your SOPs, your models, your proof — running on <span style="font-family:var(--mono)">http://127.0.0.1:8080</span>.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -512,7 +515,7 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
 <!-- ============ FOOTER ============ -->
 <footer>
   <div class="foot-in">
-    <div><div class="foot-brand">Swaraj AI <span style="color:var(--saffron2)">स्वराज</span></div><p class="foot-note">Sovereign Industrial AI Workbench. A private AI employee running inside company infrastructure — on-prem, air-gapped, local / open-weight.</p><p class="foot-note" style="font-family:var(--mono);font-size:12px">SIH26117 · stdlib-only · offline-first</p></div>
+    <div><div class="foot-brand">Swaraj AI <span style="color:var(--saffron2)">स्वराज</span></div><p class="foot-note">Sovereign Industrial AI Workbench. A private AI employee running inside company infrastructure — on-prem, air-gapped, local / open-weight.</p><p class="foot-note" style="font-family:var(--mono);font-size:12px">v0.1 · stdlib-only · offline-first</p></div>
     <div><h5>Product</h5><a href="#capabilities">Capabilities</a><a href="#golden">Golden path</a><a href="#architecture">Architecture</a><a href="#download">⬇ Download desktop</a><a href="/workbench.html">Launch workbench →</a></div>
     <div><h5>Trust</h5><a href="#security">Zero-egress proof</a><a href="/workbench.html">Audit logs</a><a href="#models">Open-weight fleet</a><a href="#languages">Bharat languages</a></div>
     <div><h5>Run it</h5><a href="/api/health">GET /api/health</a><a href="/api/security">GET /api/security</a><a href="/api/download">GET /api/download ⬇</a><a href="/api/agents">GET /api/agents</a><a href="/api/audit">GET /api/audit</a></div>
@@ -522,6 +525,8 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
 </footer>
 <div id="toast"></div>
 
+<!-- Split-deploy: set window.__BACKEND_URL__ before config.js to point at the API. Empty = same origin. -->
+<script src="./config.js"></script>
 <script>
 (function(){
   "use strict";
@@ -703,7 +708,7 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
   document.querySelectorAll('#osRow .os-btn').forEach(function(b){
     b.onclick=function(){
       var os=b.getAttribute('data-os');markOS(os);
-      var hints={windows:'Windows: extract → double-click SwarajAI.bat',linux:'Linux: unzip → chmod +x SwarajAI.sh && ./SwarajAI.sh',macos:'macOS: unzip → chmod +x SwarajAI.sh && ./SwarajAI.sh'};
+      var hints={windows:'Windows: Setup-SwarajAI.bat once, then SwarajAI every day (hidden, no console)',linux:'Linux: unzip → chmod +x SwarajAI.sh && ./SwarajAI.sh',macos:'macOS: unzip → chmod +x SwarajAI.sh && ./SwarajAI.sh'};
       $('dlMeta').textContent=hints[os]+' · full agent, offline, Node 18+.';
       if(dlFile)toast(hints[os]);
     };
@@ -736,6 +741,16 @@ footer{margin-top:56px;background:var(--paper);border-top:1px solid var(--line)}
   });
   $('dlShaBtn').onclick=function(){if(dlFile&&dlFile.sha256&&navigator.clipboard)navigator.clipboard.writeText(dlFile.sha256);toast(dlFile?'SHA-256 copied ✔':'No build yet — run npm run package:desktop');};
   $('dlVerifyBtn').onclick=function(){var c=$('dlVerifyCmd')._cmd;if(c&&navigator.clipboard)navigator.clipboard.writeText(c);toast('Verify command copied ✔');};
+
+  /* ===== local model fleet status (GET /api/models, this machine only) ===== */
+  fetch('/api/models').then(function(x){return x.json();}).then(function(m){
+    var el=$('dlModels');if(!el)return;
+    var names=(m.required||[]).map(function(r){return (r.installed?'✔ ':'✘ ')+r.name;}).join(' · ');
+    var n=(m.required||[]).filter(function(r){return r.installed;}).length;
+    if(m.ready){el.textContent='🤖 Models on this machine: 3/3 ready — '+(m.required||[]).map(function(r){return r.name;}).join(' · ');}
+    else if(m.ollamaUp){el.textContent='🤖 Models: '+n+'/3 present ('+names+') — run Pull-Models / npm run models (internet once).';}
+    else{el.textContent='🤖 Ollama not reachable — install https://ollama.com/download, then: npm run models.';}
+  }).catch(function(){var el=$('dlModels');if(el)el.textContent='🤖 local models: start the server (npm start) to check status.';});
 })();
 </script>
 </body>

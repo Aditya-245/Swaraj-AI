@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: swaraj-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: SERVE_STATIC
+        value: 0
+      - key: FRONTEND_URL
+        value: https://YOUR-FRONTEND.vercel.app

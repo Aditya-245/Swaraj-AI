@@ -19,6 +19,8 @@ build/
 # Local data / runtime (Postgres binaries + uploads are large/machine-specific)
 data/pg/
 data/uploads/
+data/memory.json
+data/context.json
 *.sqlite
 *.db
 

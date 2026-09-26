@@ -1,12 +1,14 @@
 version: "3.8"
 services:
+  # Backend = API only (no static). Frontend talks to http://api:8080 in compose.
   api:
     build: ./docker/api
     ports: ["8080:8080"]
-    environment: [PORT=8080, NODE_ENV=production]
+    environment: [PORT=8080, HOST=0.0.0.0, SERVE_STATIC=0, FRONTEND_URL=http://localhost:3000, NODE_ENV=production]
     volumes: [./data:/app/data, ./out:/app/out]
     depends_on: [qdrant, postgres, ollama]
     networks: [sovnet]
+  # Frontend = static public/ (config.js points it at the backend).
   ui:
     build: ./docker/ui
     ports: ["3000:3000"]

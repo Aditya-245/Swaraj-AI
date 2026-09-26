@@ -28,7 +28,7 @@ header.top{display:flex;align-items:center;gap:14px;padding:12px 20px;background
 .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600}
 .badge.ok{background:#E3F2E8;color:var(--leaf);border:1px solid #BFE0CC}
 .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--leaf)}
-.layout{display:grid;grid-template-columns:250px 1fr 340px;min-height:calc(100vh - 70px)}
+.layout{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 70px)}
 /* left — opencode session rail */
 aside.rail{background:var(--paper);border-right:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:12px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:10px 18px;font-weight:600;font-size:14px;cursor:pointer}
@@ -85,12 +85,28 @@ pre.dump{background:var(--term);color:#F1EAD8;border-radius:10px;padding:12px;ov
 #dropBox.drag{outline:2px dashed var(--saffron);outline-offset:-2px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .chip{font-size:12px;padding:4px 12px;border-radius:999px;background:var(--sand);color:var(--ink2);border:1px solid var(--line)}
+button.chip{font-family:inherit;cursor:pointer;transition:.2s}
+button.chip:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .chip.on{background:var(--ink);color:#fff}
 .row{display:flex;gap:10px;align-items:center;justify-content:flex-end}
-/* right — claude-code run monitor */
-aside.monitor{background:var(--term);color:#EFE7D2;padding:14px;display:flex;flex-direction:column;gap:12px;font-size:13px}
-.monitor h3{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--glow);margin:0}
-.term{background:#0F1220;border:1px solid #2A2E4A;border-radius:10px;padding:10px;font-family:var(--mono);font-size:12px;height:300px;overflow:auto;line-height:1.6}
+/* right — run monitor: off-canvas slide-over sidebar, one click to open/close */
+aside.monitor{position:fixed;top:70px;right:0;bottom:0;width:340px;max-width:90vw;z-index:260;
+  background:var(--term);color:#EFE7D2;padding:14px;display:flex;flex-direction:column;gap:12px;font-size:13px;
+  transform:translateX(102%);transition:transform .22s var(--ease);box-shadow:-20px 0 60px rgba(20,22,43,.32);overflow:auto}
+aside.monitor.open{transform:none}
+.monitor h3{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--glow);margin:0;display:flex;align-items:center;gap:8px}
+.monitor h3 .x{margin-left:auto;background:#20243C;border:1px solid #2A2E4A;color:#EFE7D2;border-radius:8px;
+  width:24px;height:24px;line-height:1;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.monitor h3 .x:hover{background:#2A2E4A}
+#monScrim{position:fixed;inset:70px 0 0;background:rgba(20,22,43,.45);z-index:250;border:0;padding:0;display:none}
+body.mon-open #monScrim{display:block}
+/* header toggle: same button opens and closes */
+#monBtn{position:relative}
+#monBtn .pulse{width:8px;height:8px;border-radius:50%;background:var(--leaf);display:none}
+body.mon-busy #monBtn .pulse{display:inline-block;animation:monPulse 1s infinite}
+@keyframes monPulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){body.mon-busy #monBtn .pulse{animation:none}}
+.term{background:#0F1220;border:1px solid #2A2E4A;border-radius:10px;padding:10px;font-family:var(--mono);font-size:12px;flex:1 1 auto;min-height:170px;overflow:auto;line-height:1.6}
 .term .t{color:#8B91B0}.term .ok{color:#7FD79A}.term .warn{color:#EAC96A}.term .run{color:var(--glow)}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .stat{background:#20243C;border:1px solid #2A2E4A;border-radius:10px;padding:10px;text-align:center}
@@ -113,10 +129,8 @@ input[type=text],textarea.box{width:100%;padding:10px;border:1px solid var(--lin
 .perm-risk.high{background:#FBE3E1;color:var(--kumkum);border:1px solid #E8A09B}
 .perm-scope{font-family:var(--mono);font-size:12px;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:8px 10px;word-break:break-all;margin:8px 0}
 .perm-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.local-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:760px){.local-grid{grid-template-columns:1fr}}
 footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);background:var(--paper);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-@media(max-width:1100px){.layout{grid-template-columns:220px 1fr}aside.monitor{display:none}}
+@media(max-width:1100px){.layout{grid-template-columns:220px 1fr}aside.monitor{width:320px}}
 @media(max-width:760px){.layout{grid-template-columns:1fr}aside.rail{flex-direction:row;flex-wrap:wrap;align-items:center}.nav{flex-direction:row;flex-wrap:wrap}}
 </style>
 </head>
@@ -129,6 +143,8 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
   </div>
   <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
     <span class="badge ok" id="egressBadge"><span class="dot"></span>ZERO-EGRESS · LOCAL ONLY</span>
+    <a class="btn btn-ghost" href="/#download" title="Get the desktop app for this PC">⬇ Desktop app</a>
+    <button class="btn btn-ghost" id="monBtn" onclick="toggleMonitor()" aria-expanded="false" aria-controls="monPanel" title="Open or close the run monitor (Esc closes)">❖ Run monitor<span class="pulse"></span></button>
     <button class="btn btn-ghost" id="acctBtn" onclick="acct()">Sign in</button>
   </div>
 </header>
@@ -156,10 +172,16 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
       <div class="eyebrow">भारत का अपना AI कर्मचारी · India's own AI employee</div>
       <h2>Namaste. What shall we build today?</h2>
       <p class="sub">Agentic runs stay inside your infrastructure — local models, private RAG, sandboxed code, auditable artefacts.</p>
+      <div class="chips" id="suggestChips" style="margin:0 0 4px">
+        <button class="chip" onclick="fillPrompt('Review inspection report IR-2026-042 for weld defects against SOP and produce approval note.')">📋 Review IR-2026-042</button>
+        <button class="chip" onclick="fillPrompt('What can you do? Show me with a short demo.')">✨ What can you do?</button>
+        <button class="chip" onclick="fillPrompt('Are all 3 local models installed and ready?')">🤖 Check my models</button>
+      </div>
+      <div class="chips" id="memStrip" style="margin:0 0 4px"><span class="hist">🧠 checking memory…</span></div>
       <div id="thread"><div class="msg agent"><div class="who">Swaraj · local planner</div>Try: <i>“Review inspection report IR-2026-042 for weld defects against SOP and produce approval note.”</i></div></div>
       <div class="composer"><div class="box" id="dropBox">
         <div class="img-preview" id="imgPreview"></div>
-        <textarea id="prompt" placeholder="ask anything"></textarea>
+        <textarea id="prompt" placeholder="Ask anything — reports, code, photos, calculations… (Enter to run)"></textarea>
         <input type="file" id="imgInput" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff" multiple hidden/>
         <div class="chips" id="routeChips"><span class="chip">auto-route</span><span class="chip">general</span><span class="chip">coding</span><span class="chip">vision</span><span class="chip">document</span></div>
         <div class="row"><span class="hist" id="runHint">offline · sandboxed · audited · 📎 images stay local</span><button class="btn btn-ghost" id="attachBtn" type="button" onclick="document.getElementById('imgInput').click()">📎 Image</button><button class="btn btn-primary" id="runBtn" onclick="runTask()">▶ Run agent</button></div>
@@ -167,48 +189,22 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
       <p class="hist">💻 Tip: try “find file report on my machine”, “create an excel sheet”, “modify D:\data\plan.xlsx”, “run node --version” — each sensitive step asks permission first.</p>
     </section>
     <section class="view" id="v-local">
-      <div class="eyebrow">Local machine · permission-gated, like OpenCode</div>
-      <h2>Local PC — search, Office, control</h2>
-      <p class="sub">Every sensitive action pauses for your approval: <b>Allow once</b> · <b>Allow always</b> · <b>Reject</b>. “Always” rules are stored in <span style="font-family:var(--mono)">data/permissions.json</span> and audited. Nothing runs silently.</p>
+      <div class="eyebrow">Local machine · one prompt, agent decides, you approve</div>
+      <h2>Local PC — just tell me what to do</h2>
+      <p class="sub">Describe the outcome in plain words. I work out whether that means finding a file, reading it, opening it, creating a spreadsheet or document, editing one, or running a program — then I <b>ask before touching anything</b>: <b>Allow once</b> · <b>Allow always</b> · <b>Reject</b>. Nothing runs silently, and every decision is audited.</p>
       <div class="jaali"></div>
-      <h3 style="font-family:var(--serif)">🔎 Search this machine</h3>
-      <div class="local-grid">
-        <input type="text" id="lcQuery" placeholder="e.g. inspection report, invoice, .xlsx"/>
-        <input type="text" id="lcRoots" placeholder="roots (optional, ; separated) — blank = workspace + home"/>
+      <div class="chips" id="localChips" style="margin:0 0 4px">
+        <button class="chip" onclick="fillLocal('Find the file plan.xlsx on my machine and open it')">🔎 Find &amp; open a file</button>
+        <button class="chip" onclick="fillLocal('Read D:\\SovereignAgent\\package.json and tell me what this project does')">📖 Read a file</button>
+        <button class="chip" onclick="fillLocal('Create an excel sheet for this month’s expenses')">📊 Create a spreadsheet</button>
+        <button class="chip" onclick="fillLocal('What is in my downloads folder?')">📂 Browse a folder</button>
+        <button class="chip" onclick="fillLocal('Run the command node --version')">⌨ Run a program</button>
       </div>
-      <p><label class="hist"><input type="checkbox" id="lcContent"/> also search inside text files</label>
-      <button class="btn btn-ghost" id="lcSearchBtn" onclick="lcSearch()">Search locally</button></p>
-      <div id="lcOut"></div>
-      <div class="jaali"></div>
-      <h3 style="font-family:var(--serif)">📁 Browse / read</h3>
-      <div class="local-grid">
-        <input type="text" id="lcDir" placeholder="folder path, e.g. D:\SovereignAgent\out"/>
-        <input type="text" id="lcFile" placeholder="file path, e.g. D:\SovereignAgent\out\report.docx"/>
-      </div>
-      <p style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost" onclick="lcList()">List folder</button>
-        <button class="btn btn-ghost" onclick="lcRead()">Read file</button>
-        <button class="btn btn-ghost" onclick="lcOpen()">Open in OS</button>
-      </p>
-      <div class="jaali"></div>
-      <h3 style="font-family:var(--serif)">📊 Office — create &amp; modify</h3>
-      <div class="local-grid">
-        <input type="text" id="lcOfficePath" placeholder="target .docx/.xlsx path (blank = out/ + timestamp)"/>
-        <input type="text" id="lcOfficeText" placeholder="text to append (paragraph or spreadsheet row)"/>
-      </div>
-      <p style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost" onclick="lcOfficeCreate('xlsx')">＋ New Excel</button>
-        <button class="btn btn-ghost" onclick="lcOfficeCreate('docx')">＋ New Word</button>
-        <button class="btn btn-ghost" onclick="lcOfficeModify()">✎ Append to file</button>
-      </p>
-      <div class="jaali"></div>
-      <h3 style="font-family:var(--serif)">⌨ Run a local command</h3>
-      <div class="local-grid">
-        <input type="text" id="lcCmd" placeholder="program, e.g. node"/>
-        <input type="text" id="lcArgs" placeholder="args, e.g. --version"/>
-      </div>
-      <p><button class="btn btn-ghost" onclick="lcExec()">Run (asks permission)</button> <span class="hist">Spawned without a shell · blocked patterns refused · timeout-killed · output capped.</span></p>
-      <pre class="dump" id="lcExecOut" style="display:none"></pre>
+      <div id="localThread"><div class="msg agent"><div class="who">Swaraj · local agent</div>Try: <i>“Find the latest inspection report and open it”</i>, <i>“Create an excel sheet for March expenses”</i>, or <i>“Append the QA sign-off to D:\docs\sop.docx”</i>.</div></div>
+      <div class="composer"><div class="box" id="localDropBox">
+        <textarea id="localPrompt" placeholder="Tell me what to do on this PC — e.g. “find budget.xlsx and open it”, “create a word document called notes.docx”, “run node --version” (Enter to run)"></textarea>
+        <div class="row"><span class="hist">🔐 every step asks permission first · offline · audited</span><button class="btn btn-primary" id="localRunBtn" onclick="runLocalTask()">▶ Run on this PC</button></div>
+      </div></div>
       <div class="jaali"></div>
       <h3 style="font-family:var(--serif)">🔐 Saved permissions</h3>
       <p><button class="btn btn-ghost" onclick="lcPolicy()">Refresh</button>
@@ -256,8 +252,9 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
       <pre class="dump" id="secOut" style="white-space:pre-wrap">Checking safety…</pre>
     </section>
   </main>
-  <aside class="monitor">
-    <h3>❖ Run monitor — live agent trace</h3>
+  <button id="monScrim" onclick="toggleMonitor(false)" aria-label="Close run monitor"></button>
+<aside class="monitor" id="monPanel" aria-label="Run monitor">
+    <h3>❖ Run monitor — live agent trace<button class="x" onclick="toggleMonitor(false)" title="Close (Esc)" aria-label="Close run monitor">✕</button></h3>
     <div class="term" id="term"><div><span class="t">swaraj-agent</span> <span class="ok">● idle</span> · local only · awaiting task</div></div>
     <h3>❖ Model route</h3>
     <div class="kv"><div class="stat"><b id="stRoute">—</b><span>route</span></div><div class="stat"><b id="stModel" style="font-size:13px;font-family:var(--mono)">—</b><span>model</span></div></div>
@@ -291,6 +288,8 @@ footer{padding:14px 20px;color:var(--muted);font-size:12px;border-top:1px solid 
   </div>
 </div>
 <footer><span>🇮🇳 Swaraj AI · AI for all, from India · runs fully offline on your infrastructure</span><span id="foot">local · sandboxed · audited</span></footer>
+<!-- Split-deploy: set window.__BACKEND_URL__ before config.js to point at the API (e.g. Render). Empty = same origin (monolith). -->
+<script src="./config.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
@@ -300,8 +299,19 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
   if(b.dataset.v==='agents')agents();if(b.dataset.v==='audit')audit();if(b.dataset.v==='sec')sec();if(b.dataset.v==='docs')docs();if(b.dataset.v==='local')lcPolicy();
 });
 function tlog(cls,html){const t=$('term');const d=document.createElement('div');d.innerHTML=`<span class="t">${new Date().toLocaleTimeString()}</span> <span class="${cls}">${html}</span>`;t.appendChild(d);t.scrollTop=t.scrollHeight;}
+/* ---- run monitor sidebar: one click opens, one click closes ---- */
+const MON_KEY='swaraj.monitor.open';
+function toggleMonitor(force){
+  const open=force===undefined?!$('monPanel').classList.contains('open'):!!force;
+  $('monPanel').classList.toggle('open',open);
+  document.body.classList.toggle('mon-open',open);
+  $('monBtn').setAttribute('aria-expanded',String(open));
+  try{localStorage.setItem(MON_KEY,open?'1':'0');}catch{}
+  if(open){const t=$('term');t.scrollTop=t.scrollHeight;}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('monPanel').classList.contains('open'))toggleMonitor(false);});
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function bubble(who,text,cls){const th=$('thread');const d=document.createElement('div');d.className='msg '+cls;d.innerHTML=`<div class="who">${esc(who)}</div>${text}`;th.appendChild(d);th.scrollTop=th.scrollHeight;persistMsg(who,text,cls);}
+function bubble(who,text,cls,threadId){const th=$(threadId||'thread');const d=document.createElement('div');d.className='msg '+cls;d.innerHTML=`<div class="who">${esc(who)}</div>${text}`;th.appendChild(d);th.scrollTop=th.scrollHeight;if(!threadId)persistMsg(who,text,cls);}
 /* ---- local chat history: every message, every session, in localStorage ---- */
 const LS_KEY='swaraj.history.v1', MAX_SESS=30, MAX_MSG=200;
 let sessions=[], currentId=null;
@@ -396,6 +406,7 @@ async function runTask(){
   const promptToSend=p||'Describe this image in detail and flag any weld defects, corrosion, cracks, or safety issues.';
   $('prompt').value='';pendingImages=[];renderPreviews();
   $('runBtn').disabled=true;$('runBtn').textContent='⏳ Running locally…';
+  document.body.classList.add('mon-busy'); // pulsing dot on the monitor toggle
   const imgHtml=readyImgs.map(f=>`<a href="${esc(f.url)}" target="_blank"><img class="attached" src="${esc(f.url)}" alt="${esc(f.orig||'uploaded image')}"/></a>`).join('');
   bubble('You',(imgHtml?imgHtml:'')+(p?esc(p):'<i style="color:var(--muted)">[image only — auto prompt]</i>'),'user');
   if(readyImgs.length)tlog('run','◆ '+readyImgs.length+' image(s) attached — vision (moondream, local)');
@@ -405,14 +416,20 @@ async function runTask(){
   catch(e){tlog('warn','◌ live stream unavailable — falling back to one-shot reply');}
   if(!streamed){try{await onceRun(promptToSend,filesToSend);}catch(e){bubble('Swaraj','Server unreachable — is the workbench running on 127.0.0.1:8080?','agent');tlog('warn','✖ fetch failed');}}
   $('runBtn').disabled=false;$('runBtn').textContent='▶ Run agent';
+  document.body.classList.remove('mon-busy');
+  try{loadMem();}catch{} // newly remembered facts (e.g. company) appear instantly
 }
 /* Live word-by-word reply over SSE (POST /api/tasks/stream). Returns true when
    the stream completed (even for error verdicts); throws when the stream itself
-   broke so the caller can fall back to the one-shot endpoint. */
-async function streamRun(promptToSend,filesToSend){
-  const res=await fetch('/api/tasks/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptToSend,files:filesToSend})});
+   broke so the caller can fall back to the one-shot endpoint.
+   opts: {threadId, local} — the Local PC screen renders into its own thread
+   and sets local:true so the server routes to the local agent. */
+async function streamRun(promptToSend,filesToSend,opts){
+  opts=opts||{};
+  const tid=opts.threadId||'thread';
+  const res=await fetch('/api/tasks/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptToSend,files:filesToSend,local:!!opts.local})});
   if(!res.ok||!res.body)throw new Error('stream unavailable');
-  const th=$('thread');
+  const th=$(tid);
   const wrap=document.createElement('div');wrap.className='msg agent';
   const who=document.createElement('div');who.className='who';who.textContent='Swaraj · thinking… (local)';
   const bodyEl=document.createElement('div');bodyEl.innerHTML='<span class="caret">▍</span>';
@@ -450,7 +467,7 @@ async function streamRun(promptToSend,filesToSend){
   full+=queue;queue='';
   const r=finalResult;
   if(!r)throw new Error('stream ended without result');
-  if(!r.ok){wrap.remove();bubble('Swaraj',esc(r.error||'failed'),'agent');tlog('warn','✖ '+esc(r.error||'failed'));return true;}
+  if(!r.ok){wrap.remove();bubble('Swaraj',esc(r.error||'failed'),'agent',tid);tlog('warn','✖ '+esc(r.error||'failed'));return true;}
   $('stRoute').textContent=r.route.route;$('stModel').textContent=r.route.model;
   const icons={chat:'◌',qa:'❓',code:'⌨',vision:'👁',local:'💻'};
   let body;
@@ -470,15 +487,17 @@ async function streamRun(promptToSend,filesToSend){
     tlog('ok',`${icons[r.kind]||'◌'} ${r.kind} · ${esc(r.replyModel)} (${esc(r.replySource)}) · no artefacts`);}
   bodyEl.innerHTML=body;
   who.textContent='Swaraj · '+(r.replyModel||r.route.model);
-  persistMsg(who.textContent,body,'agent');
+  if(!opts.threadId)persistMsg(who.textContent,body,'agent');
   if(nearBottom())followBottom();
   sec(true);
   return true;
 }
 /* One-shot fallback: identical rendering, single response (old behaviour). */
-async function onceRun(promptToSend,filesToSend){
-  const r=await(await fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptToSend,files:filesToSend})})).json();
-    if(!r.ok){bubble('Swaraj',esc(r.error||'failed'),'agent');tlog('warn','✖ '+esc(r.error||'failed'));}
+async function onceRun(promptToSend,filesToSend,opts){
+  opts=opts||{};
+  const tid=opts.threadId||'thread';
+  const r=await(await fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptToSend,files:filesToSend,local:!!opts.local})})).json();
+    if(!r.ok){bubble('Swaraj',esc(r.error||'failed'),'agent',tid);tlog('warn','✖ '+esc(r.error||'failed'));}
     else{
       $('stRoute').textContent=r.route.route;$('stModel').textContent=r.route.model;
       if(r.kind==='chat'||r.kind==='qa'||r.kind==='code'||r.kind==='vision'||r.kind==='local'){
@@ -487,7 +506,7 @@ async function onceRun(promptToSend,filesToSend){
         if(r.kind==='local'){body=localHtml(r);}
         else if(r.kind==='code'){body=`<pre class="dump">${esc(r.reply||'')}</pre>`;}
         else{body=esc(r.reply||'Done.').split(/\n+/).map(p=>`<p style="margin:6px 0">${p}</p>`).join('');}
-        bubble('Swaraj · '+esc(r.replyModel||r.route.model),body,'agent');
+        bubble('Swaraj · '+esc(r.replyModel||r.route.model),body,'agent',tid);
         tlog('ok',`${icons[r.kind]||'◌'} ${r.kind} · ${esc(r.replyModel)} (${esc(r.replySource)}) · no artefacts`);
         sec(true);
       }
@@ -508,7 +527,7 @@ async function onceRun(promptToSend,filesToSend){
         `<div class="tool"><b>👁 Vision</b><span>${r.vision?r.vision.findings.map(f=>f.label).join(', '):'n/a'}</span></div>`+
         `<div class="tool"><b>🛡 Egress</b><span>${r.egress.externalLLM}/${r.egress.remoteMCP}/${r.egress.externalAPI}/0</span></div></div>`+
         `<div class="arts"><a href="/artifact/${encodeURIComponent(r.docx.path.split(/[\\/]/).pop())}">⬇ ${esc(r.docx.path.split(/[\\/]/).pop())}</a><a href="/artifact/${encodeURIComponent(r.pdf.path.split(/[\\/]/).pop())}">⬇ ${esc(r.pdf.path.split(/[\\/]/).pop())}</a></div>`+
-        friendlyTraceHtml(r),'agent');
+        friendlyTraceHtml(r),'agent',tid);
       tlog('ok',`✒ reply by ${esc(r.replyModel)} (${esc(r.replySource)})`);
       tlog('ok',`✔ artefacts → ${esc(r.docx.path.split(/[\\/]/).pop())} + ${esc(r.pdf.path.split(/[\\/]/).pop())}`);
       tlog('ok','✔ audit appended · zero-egress 0/0/0/0');
@@ -516,6 +535,33 @@ async function onceRun(promptToSend,filesToSend){
       }
     }
 }
+function fillPrompt(t){try{$('prompt').value=t;$('prompt').focus();}catch{}}
+function fillLocal(t){try{$('localPrompt').value=t;$('localPrompt').focus();}catch{}}
+/* Local PC: one prompt → the agent plans the steps → each one asks permission.
+   Same streaming/permission machinery as chat, rendered into #localThread. */
+async function runLocalTask(){
+  const p=$('localPrompt').value.trim();
+  if(!p)return;
+  $('localPrompt').value='';
+  $('localRunBtn').disabled=true;$('localRunBtn').textContent='⏳ Working locally…';
+  document.body.classList.add('mon-busy');
+  bubble('You',esc(p),'user','localThread');
+  tlog('run','◆ local request — planning steps');
+  const opts={threadId:'localThread',local:true};
+  let streamed=false;
+  try{streamed=await streamRun(p,[],opts);}
+  catch(e){tlog('warn','◌ live stream unavailable — falling back to one-shot reply');}
+  if(!streamed){try{await onceRun(p,[],opts);}catch(e){bubble('Swaraj','Server unreachable — is the workbench running on 127.0.0.1:8080?','agent','localThread');tlog('warn','✖ fetch failed');}}
+  $('localRunBtn').disabled=false;$('localRunBtn').textContent='▶ Run on this PC';
+  document.body.classList.remove('mon-busy');
+  lcPolicy();
+}
+async function loadMem(){try{const r=await(await fetch('/api/memory')).json();let n=null;try{const c=await(await fetch('/api/context')).json();n=c.count;}catch{}paintMem(r.facts||{},n);}catch{const w=$('memStrip');if(w)w.innerHTML='';}}
+function paintMem(facts,turns){const w=$('memStrip');if(!w)return;const ks=Object.keys(facts||{});
+  const ctx=(turns==null||turns===0)?'':`<span class="hist">💬 ${turns} recent turn${turns===1?'':'s'} in context across sessions</span>`;
+  if(!ks.length){w.innerHTML='<span class="hist">🧠 Nothing remembered yet — try &ldquo;remember my company name is Kalash Seeds&rdquo;.</span>'+ctx;return;}
+  w.innerHTML='<span class="hist">🧠 Remembers:</span> '+ks.map(k=>`<button class="chip" title="Forget this" onclick="forgetMem('${esc(k)}')">${esc(k)}: ${esc(facts[k])} ✕</button>`).join('')+ctx;}
+async function forgetMem(k){try{await fetch('/api/memory/'+encodeURIComponent(k),{method:'DELETE'});}catch{}loadMem();}
 function newTask(){const id='s-'+Date.now();sessions.unshift({id,title:'New chat',createdAt:Date.now(),updatedAt:Date.now(),messages:[{...GREET}]});if(sessions.length>MAX_SESS)sessions.length=MAX_SESS;currentId=id;pendingImages=[];renderPreviews();$('prompt').value='';saveStore();paintThread();renderHist();$('prompt').focus();document.querySelector('[data-v=chat]').click();}
 async function kb(){const q=$('q').value;const r=await(await fetch('/api/kb?q='+encodeURIComponent(q))).json();
   $('kbOut').innerHTML=(r.hits||[]).map(h=>`<div class="msg agent"><div class="who">${esc(h.id)} · chunk ${h.chunk} · score ${h.score.toFixed(2)}</div>${esc(h.text)}</div>`).join('')||'<p class="sub">No local hits.</p>';}
@@ -620,18 +666,23 @@ setInterval(async()=>{
   }catch{}
 },1800);
 function localHtml(r){
-  const steps=(r.steps||[]).map(s=>`<div class="tool"><b>💻 Step</b><span>${esc(s)}</span></div>`).join('');
+  // The agent's plan: what it decided to do, and the outcome of each approved step.
+  const plan=(r.plan||[]).map(s=>`<div class="tool"><b>${s.ok===false?'✕':'✔'} ${esc(s.label||s.tool)}</b><span>${esc(s.detail||'')}</span></div>`).join('');
+  const steps=plan||(r.steps||[]).map(s=>`<div class="tool"><b>✔ ${esc(s.split(' ')[0])}</b><span>${esc(s)}</span></div>`).join('');
   let extra='';
   const L=r.local;
   if(L&&Array.isArray(L.results)){
     extra='<div class="toolgrid">'+L.results.slice(0,8).map(h=>`<div class="tool"><b>${esc(h.name)}</b><span>${esc(h.path)}${h.snippet?' · '+esc(h.snippet.slice(0,80)):''}</span></div>`).join('')+'</div>';
-    if(!L.results.length)extra='<p class="sub">No matches — try fewer words or another root.</p>';
+    if(!L.results.length)extra='<p class="sub">No matches — try fewer words or another folder.</p>';
   }else if(L&&L.path){
     extra=`<div class="arts"><span class="hist">${esc(L.path)}${L.bytes?' · '+L.bytes+'B':''}</span></div>`+(L.text?`<pre class="dump">${esc(String(L.text).slice(0,1500))}</pre>`:'');
+  }else if(L&&L.entries){
+    extra='<p class="sub">'+esc(L.dir||'')+' · '+L.entries.length+' entries</p><div class="toolgrid">'+L.entries.slice(0,20).map(e=>`<div class="tool"><b>${e.dir?'📁 ':'📄 '}${esc(e.name)}</b><span>${esc(e.path)}</span></div>`).join('')+'</div>';
   }else if(L&&L.output!==undefined){
     extra=`<pre class="dump">${esc(String(L.output||L.error||'').slice(0,1500))}</pre>`;
   }
-  return proseHtml(r.reply||'Done.')+`<div class="toolgrid">${steps}</div>`+extra;
+  const note=r.permission?`<p class="sub">🔐 ${r.permission==='PERMISSION_TIMEOUT'?'You did not answer in time, so nothing happened.':'You rejected that step, so your machine was left untouched.'}</p>`:'';
+  return proseHtml(r.reply||'Done.')+`<div class="toolgrid">${steps}</div>`+extra+note;
 }
 /* ---- Local PC panel (direct APIs — each still asks permission) ---- */
 async function lcCall(url,body,btn){
@@ -642,65 +693,8 @@ async function lcCall(url,body,btn){
     return r;
   }finally{if(btn){btn.disabled=false;btn.textContent=btn._o;}}
 }
-async function lcSearch(){
-  const q=$('lcQuery').value.trim();if(!q)return alert('Type what to find first.');
-  const roots=$('lcRoots').value.split(';').map(s=>s.trim()).filter(Boolean);
-  $('lcOut').innerHTML='<p class="sub">Searching… (approve the prompt if asked)</p>';
-  try{
-    const r=await lcCall('/api/local/search',{query:q,roots:roots.length?roots:undefined,includeContent:$('lcContent').checked},$('lcSearchBtn'));
-    $('lcOut').innerHTML=`<p class="sub">${r.count} match(es) · ${r.scanned} scanned · ${r.tookMs}ms</p>`+
-      (r.results.map(h=>`<div class="msg agent"><div class="who">${esc(h.match==='content'?'📄 content hit':'📄 '+h.name)}</div>${esc(h.path)} <span class="hist">(${(h.size/1024).toFixed(1)}KB)</span>${h.snippet?'<br/>'+esc(h.snippet):''}<br/><button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="lcQuickRead('${esc(h.path).replace(/'/g,"\\'")}')">Read</button></div>`).join('')||'<p class="sub">No matches.</p>');
-    tlog('ok','💻 local search · '+r.count+' hit(s)');
-  }catch(e){$('lcOut').innerHTML=`<p class="sub">Search stopped: ${esc(e.message)}</p>`;tlog('warn','✖ '+esc(e.message));}
-}
-async function lcQuickRead(p){$('lcFile').value=p;lcRead();}
-async function lcList(){
-  const dir=$('lcDir').value.trim()||'.';
-  try{
-    const r=await lcCall('/api/local/list',{dir});
-    $('lcOut').innerHTML=`<p class="sub">${esc(r.dir)} · ${r.count} entries</p><div class="toolgrid">`+r.entries.map(e=>`<div class="tool"><b>${e.dir?'📁 ':'📄 '}${esc(e.name)}</b><span>${esc(e.path)}</span></div>`).join('')+'</div>';
-  }catch(e){alert(e.message);}
-}
-async function lcRead(){
-  const p=$('lcFile').value.trim();if(!p)return alert('Enter a file path.');
-  try{
-    const r=await lcCall('/api/local/read',{path:p});
-    const body=r.rows?('<table>'+r.rows.slice(0,12).map(row=>'<tr>'+row.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table>'):(r.paragraphs||[]).slice(0,12).map(t=>'<p style="margin:4px 0">'+esc(t)+'</p>').join('')||('<pre class="dump">'+esc(String(r.text||'').slice(0,2000))+'</pre>');
-    $('lcOut').innerHTML=`<div class="msg agent"><div class="who">${esc(r.kind||'file')} · ${esc(r.path)} · ${r.bytes}B</div>${body}</div>`;
-  }catch(e){alert(e.message);}
-}
-async function lcOpen(){const p=$('lcFile').value.trim()||$('lcDir').value.trim();if(!p)return alert('Enter a path.');try{await lcCall('/api/local/open',{path:p});tlog('ok','💻 opened '+p);}catch(e){alert(e.message);}}
-async function lcOfficeCreate(kind){
-  const target=$('lcOfficePath').value.trim();
-  const text=$('lcOfficeText').value.trim()||'Drafted locally by Swaraj AI';
-  try{
-    const body=kind==='xlsx'?{kind,rows:[['Item','Value'],[text,new Date().toISOString().slice(0,10)]]}:{kind,paras:[text]};
-    if(target)body.path=target;
-    const r=await lcCall('/api/local/office-create',body);
-    $('lcOut').innerHTML=`<div class="msg agent"><div class="who">Created ${esc(kind)}</div>${esc(r.path)} (${r.bytes}B)</div>`;
-    tlog('ok','💻 created '+r.path);docs();
-  }catch(e){alert(e.message);}
-}
-async function lcOfficeModify(){
-  const target=$('lcOfficePath').value.trim();if(!target)return alert('Enter the .docx/.xlsx path to modify.');
-  const text=$('lcOfficeText').value.trim()||('Update '+new Date().toISOString().slice(0,10));
-  try{
-    const body=/\.xlsx$/i.test(target)?{path:target,appendRows:[[text,new Date().toISOString().slice(0,10)]]}:{path:target,append:[text]};
-    const r=await lcCall('/api/local/office-modify',body);
-    $('lcOut').innerHTML=`<div class="msg agent"><div class="who">Modified</div>${esc(r.path)} (${r.bytes}B)</div>`;
-    tlog('ok','💻 modified '+r.path);
-  }catch(e){alert(e.message);}
-}
-async function lcExec(){
-  const cmd=$('lcCmd').value.trim();if(!cmd)return alert('Enter a program.');
-  const args=$('lcArgs').value.trim().split(/\s+/).filter(Boolean);
-  $('lcExecOut').style.display='block';$('lcExecOut').textContent='running… (approve the prompt if asked)';
-  try{
-    const r=await lcCall('/api/local/exec',{cmd,args});
-    $('lcExecOut').textContent=(r.ok?'$ '+cmd+' '+args.join(' ')+'\n\n':'FAILED: '+(r.error||'')+'\n\n')+(r.output||'');
-    tlog(r.ok?'ok':'warn','💻 exec '+cmd+' → '+(r.ok?'ok':'failed'));
-  }catch(e){$('lcExecOut').textContent='stopped: '+e.message;}
-}
+/* Local-PC actions are now driven by one prompt (see runLocalTask); only the
+   permission-policy helpers below remain. */
 async function lcPolicy(){
   try{
     const r=await(await fetch('/api/permissions/policy')).json();
@@ -711,8 +705,10 @@ async function lcPolicy(){
 async function lcRevoke(id){await fetch('/api/permissions/revoke',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ruleId:id})});lcPolicy();}
 async function lcReset(){if(!confirm('Forget all “allow always” rules?'))return;await fetch('/api/permissions/reset',{method:'POST'});lcPolicy();}
 loadStore();paintThread();renderHist();
-docs();sec(true);
+docs();sec(true);loadMem();
+try{if(localStorage.getItem(MON_KEY)==='1')toggleMonitor(true);}catch{}
 $('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runTask();}});
+$('localPrompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runLocalTask();}});
 $('imgInput').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
 (function(){const box=$('dropBox');box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('drag');});box.addEventListener('dragleave',()=>box.classList.remove('drag'));box.addEventListener('drop',e=>{e.preventDefault();box.classList.remove('drag');if(e.dataTransfer&&e.dataTransfer.files)handleFiles(e.dataTransfer.files);});})();
 </script>
